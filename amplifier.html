@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>BJT Common-Collector Amplifier — Nabeel Abu Zaineh</title>
+<meta name="description" content="A 2N3904 common-collector amplifier designed by hand to a gain spec, simulated in LTSpice, and verified on hardware with spectrum and phase analysis.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@700;800&family=IBM+Plex+Sans:wght@400;600&family=IBM+Plex+Mono:wght@400;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<header>
+  <div class="wrap nav">
+    <a class="brand" href="index.html">nabeel@ece:~$<span class="cursor">█</span></a>
+    <nav aria-label="Main">
+      <ul>
+        <li><a href="index.html">Home</a></li>
+        <li><a href="projects.html" aria-current="page">Projects</a></li>
+        <li><a href="index.html#contact">Contact</a></li>
+      </ul>
+    </nav>
+  </div>
+</header>
+
+<main class="wrap">
+  <div class="detail-hero">
+    <p class="crumb"><a href="projects.html">Projects</a> / PROJ-2EI4-AMP</p>
+    <h1>BJT Common-Collector Amplifier</h1>
+    <div class="detail-meta">
+      <span class="tag">2N3904</span><span class="tag">Small-signal design</span>
+      <span class="tag">LTSpice</span><span class="tag">Spectrum analysis</span>
+      <span class="tag">ELECENG 2EI4</span>
+    </div>
+  </div>
+
+  <div class="detail-body">
+    <h2><span class="num">1.0</span>Overview &amp; Specification</h2>
+    <p>
+      The goal: design an amplifier with gain greater than 0.9 (attenuation under 10%)
+      while maintaining linearity, driving a 100 Ω load from a source with 100 Ω output
+      resistance. I chose an NPN BJT (2N3904) in common-collector (emitter-follower)
+      configuration — the natural topology for a near-unity-gain buffer, achievable with
+      the standard component kit.
+    </p>
+
+    <h2><span class="num">2.0</span>Hand Design</h2>
+    <p>
+      The design proceeded from the small-signal model, working backwards from the spec to
+      component values:
+    </p>
+    <ol>
+      <li>
+        <strong>Transconductance.</strong> Enforcing linearity for inputs up to 0.5 V
+        (0.2·V<sub>T</sub>(1 + g<sub>m</sub>R<sub>L</sub>) ≥ V<sub>in</sub>) gives the
+        requirement g<sub>m</sub> ≥ 990 mS.
+      </li>
+      <li>
+        <strong>Input resistance of the transistor.</strong> With β = 100 (typical for the
+        2N3904), r<sub>π</sub> = β/g<sub>m</sub> ≈ 101 Ω, so
+        R′<sub>in</sub> = r<sub>π</sub>(1 + g<sub>m</sub>R<sub>L</sub>) ≥ 10.1 kΩ.
+      </li>
+      <li>
+        <strong>Bias network.</strong> The gain expression
+        A<sub>V</sub> = [g<sub>m</sub>R<sub>L</sub>/(1 + g<sub>m</sub>R<sub>L</sub>)] ·
+        [R<sub>in</sub>/(R<sub>in</sub> + R<sub>s</sub>)] ≥ 0.9 requires
+        R<sub>in</sub> ≥ 1 kΩ; solving the parallel combination for equal divider
+        resistors gives R<sub>1</sub> = R<sub>2</sub> &gt; 2.2 kΩ. I used 10 kΩ for
+        comfortable margin.
+      </li>
+    </ol>
+    <div class="fig-slot">
+      <strong>FIGURE SLOT</strong>
+      Add the LTSpice circuit diagram (Figure 1) here.
+    </div>
+
+    <h2><span class="num">3.0</span>Simulation</h2>
+    <p>
+      A 10 ms transient simulation using the LTSpice 2N3904 model verified the design
+      against a 1 kHz, 0.5 V sine input. Measured at the cursors: V<sub>in</sub> peak of
+      499.99 mV against a V<sub>out</sub> peak of 482.09 mV — a gain of 0.964 and
+      attenuation of 3.58%, comfortably inside spec.
+    </p>
+
+    <h2><span class="num">4.0</span>Hardware Verification</h2>
+    <p>
+      The circuit was built on a breadboard and driven with the AD3. Peak measurements gave
+      V<sub>in</sub> = 498.71 mV and V<sub>out</sub> = 453.67 mV — a gain of ~0.91 and
+      attenuation of ~9%, inside the specification. The 5.6% deviation from simulation is
+      attributable to component tolerances.
+    </p>
+    <table class="specs">
+      <caption>Results vs. specification</caption>
+      <tr><th>Metric</th><th>Spec</th><th>Simulated</th><th>Measured</th></tr>
+      <tr><td>Gain</td><td>&gt; 0.9</td><td>0.964</td><td>0.91</td></tr>
+      <tr><td>Attenuation</td><td>&lt; 10%</td><td>3.58%</td><td>~9%</td></tr>
+      <tr><td>Sim vs. hardware error</td><td>—</td><td colspan="2">5.6%</td></tr>
+    </table>
+    <div class="fig-slot">
+      <strong>FIGURE SLOT</strong>
+      Add the breadboard photo and the V<sub>in</sub>/V<sub>out</sub> scope capture here.
+    </div>
+
+    <h2><span class="num">5.0</span>Linearity Analysis</h2>
+    <p>Linearity was verified three independent ways:</p>
+    <ul>
+      <li>
+        <strong>Spectrum plot.</strong> FFTs of input and output overlap closely across the
+        band, with no significant harmonic content — minimal distortion.
+      </li>
+      <li>
+        <strong>Phase measurements.</strong> Input–output phase was measured at 1 Hz,
+        1 kHz, and 5 kHz; all values were small (0.06° at 5 kHz), showing the output
+        tracks the input across frequency.
+      </li>
+      <li>
+        <strong>XY plot.</strong> Plotting V<sub>out</sub> against V<sub>in</sub> yields a
+        tight, straight trace — the visual signature of a linear system.
+      </li>
+    </ul>
+    <div class="callout">
+      <p class="callout-label">Key result</p>
+      <p>
+        A complete design loop closed on spec: hand calculation → simulation (0.964) →
+        hardware (0.91), with linearity independently confirmed by spectrum, phase, and XY
+        analysis.
+      </p>
+    </div>
+  </div>
+
+  <div class="proj-pager">
+    <a class="btn" href="switches.html">← Prev: MOSFET Switches</a>
+    <a class="btn" href="hub.html">Next: Learning Hub →</a>
+  </div>
+</main>
+
+<footer id="contact">
+  <div class="wrap">
+    <div class="foot-grid">
+      <div>
+        <h2>Contact</h2>
+        <p>Open to co-op roles in hardware, embedded, or test engineering.</p>
+      </div>
+      <ul class="contact-list">
+        <li><span class="label">email</span><a href="mailto:your.email@example.com">your.email@example.com</a></li>
+        <li><span class="label">linkedin</span><a href="https://linkedin.com/in/your-handle">/in/your-handle</a></li>
+        <li><span class="label">github</span><a href="https://github.com/your-handle">/your-handle</a></li>
+      </ul>
+    </div>
+    <p class="fineprint">© 2026 Nabeel Abu Zaineh · Built by hand, like the circuits.</p>
+  </div>
+</footer>
+</body>
+</html>

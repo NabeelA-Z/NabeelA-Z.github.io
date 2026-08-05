@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Transistor-Level XOR Gate — Nabeel Abu Zaineh</title>
+<meta name="description" content="CMOS and pass-transistor XOR gate implementations designed, built, and characterized at the transistor level with full timing analysis.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@700;800&family=IBM+Plex+Sans:wght@400;600&family=IBM+Plex+Mono:wght@400;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<header>
+  <div class="wrap nav">
+    <a class="brand" href="index.html">nabeel@ece:~$<span class="cursor">█</span></a>
+    <nav aria-label="Main">
+      <ul>
+        <li><a href="index.html">Home</a></li>
+        <li><a href="projects.html" aria-current="page">Projects</a></li>
+        <li><a href="index.html#contact">Contact</a></li>
+      </ul>
+    </nav>
+  </div>
+</header>
+
+<main class="wrap">
+  <div class="detail-hero">
+    <p class="crumb"><a href="projects.html">Projects</a> / PROJ-2EI4-XOR</p>
+    <h1>Transistor-Level XOR Gate — Two Implementations</h1>
+    <div class="detail-meta">
+      <span class="tag">Static CMOS</span><span class="tag">Pass-transistor logic</span>
+      <span class="tag">LTSpice</span><span class="tag">Logic analyzer</span>
+      <span class="tag">ELECENG 2EI4</span>
+    </div>
+  </div>
+
+  <div class="detail-body">
+    <h2><span class="num">1.0</span>Overview</h2>
+    <p>
+      An XOR gate (Y = A′B + AB′) designed and built entirely from discrete MOSFETs on a
+      CD4007-family IC, in two different logic styles: a static CMOS implementation with
+      complementary pull-up and pull-down networks, and a pass-transistor implementation.
+      Both were verified functionally with a logic analyzer, then characterized under a
+      capacitive load to compare their switching performance.
+    </p>
+    <div class="fig-slot">
+      <strong>FIGURE SLOT</strong>
+      Add your LTSpice schematic (Figure 1 of the report) and breadboard photo here.
+    </div>
+
+    <h2><span class="num">2.0</span>Design: Transistor Sizing</h2>
+    <p>
+      In static CMOS, the pull-up network (PMOS, connecting Y to V<sub>CC</sub>) and
+      pull-down network (NMOS, connecting Y to ground) must have matched switching delays
+      to minimize glitches during transitions. PMOS devices conduct with holes and NMOS
+      with electrons — and since electron mobility is roughly 2.5× hole mobility, the PMOS
+      W/L ratio must be scaled up to compensate:
+    </p>
+    <table class="specs">
+      <caption>Device sizing</caption>
+      <tr><th>Device</th><th>W/L ratio</th><th>Rationale</th></tr>
+      <tr><td>PMOS</td><td>5 : 1</td><td rowspan="2">2.5 : 1 PMOS:NMOS ratio compensates for hole vs. electron mobility, balancing pull-up and pull-down delay</td></tr>
+      <tr><td>NMOS</td><td>2 : 1</td></tr>
+    </table>
+    <p>
+      The CD4007 IC used matches this sizing, so the ideal ratio holds without external
+      compensation — neither half of the gate lags the other.
+    </p>
+
+    <h2><span class="num">3.0</span>Functional Verification</h2>
+    <p>
+      Verification used the Analog Discovery 3's digital I/O and logic analyzer. All input
+      combinations were driven on DIO 0 and DIO 1 while DIO 2 captured the output — the
+      output goes high when exactly one input is high, confirming XOR behaviour.
+    </p>
+    <p>
+      Static level testing then tied one input high while the other toggled 0–5 V. With one
+      input fixed high, an XOR degenerates into an inverter, and the output behaved exactly
+      that way — in <em>both</em> input orderings, demonstrating the circuit computes
+      A ⊕ B and B ⊕ A identically (fully symmetric inputs). Logic levels were clean
+      rail-to-rail: V<sub>H</sub> = 5 V, V<sub>L</sub> = 0 V.
+    </p>
+    <div class="fig-slot">
+      <strong>FIGURE SLOT</strong>
+      Add the logic analyzer capture (Figure 3) and static level test scope shots here.
+    </div>
+
+    <h2><span class="num">4.0</span>Timing Characterization</h2>
+    <p>
+      To measure dynamic performance, a 100 nF load capacitor was attached and one input
+      driven with a 1 kHz square wave. Rise time (10%→90%), fall time (90%→10%), and
+      propagation delays (50% input to 50% output) were extracted with cursors:
+    </p>
+    <table class="specs">
+      <caption>Measured timing, 100 nF load @ 1 kHz</caption>
+      <tr><th>Parameter</th><th>Static CMOS</th><th>Pass-transistor</th><th>Δ</th></tr>
+      <tr><td>t<sub>rise</sub></td><td>333 µs</td><td>340 µs</td><td>+2.1%</td></tr>
+      <tr><td>t<sub>fall</sub></td><td>308 µs</td><td>310 µs</td><td>+0.64%</td></tr>
+      <tr><td>τ<sub>plh</sub></td><td>160 µs</td><td>138 µs</td><td>−13.75%</td></tr>
+      <tr><td>τ<sub>phl</sub></td><td>163 µs</td><td>139 µs</td><td>−14.72%</td></tr>
+      <tr><td>τ<sub>p</sub> (average)</td><td>161.5 µs</td><td>138.5 µs</td><td>−14.24%</td></tr>
+    </table>
+    <p>
+      These delays are far larger than a typical XOR gate's because the 100 nF load dwarfs
+      CMOS parasitic capacitances — the point of the test was relative comparison between
+      the two topologies under identical loading, not absolute speed.
+    </p>
+
+    <h2><span class="num">5.0</span>Discussion</h2>
+    <p>
+      Rise and fall times were nearly identical between implementations (within ~2%), which
+      makes sense: both are ultimately charging the same 100 nF load through similar device
+      resistances. The interesting result is the propagation delay — the pass-transistor
+      implementation was ~14% faster. With fewer stacked devices between input and output,
+      the signal path is shorter, at the cost of the robustness advantages of fully
+      complementary static CMOS.
+    </p>
+    <div class="callout">
+      <p class="callout-label">Key result</p>
+      <p>
+        Same logic function, two topologies, quantified head-to-head: the pass-transistor
+        XOR trades static CMOS's robustness for a measured 14.24% reduction in average
+        propagation delay.
+      </p>
+    </div>
+  </div>
+
+  <div class="proj-pager">
+    <a class="btn" href="lidar.html">← Prev: LIDAR Mapper</a>
+    <a class="btn" href="switches.html">Next: MOSFET Switches →</a>
+  </div>
+</main>
+
+<footer id="contact">
+  <div class="wrap">
+    <div class="foot-grid">
+      <div>
+        <h2>Contact</h2>
+        <p>Open to co-op roles in hardware, embedded, or test engineering.</p>
+      </div>
+      <ul class="contact-list">
+        <li><span class="label">email</span><a href="mailto:your.email@example.com">your.email@example.com</a></li>
+        <li><span class="label">linkedin</span><a href="https://linkedin.com/in/your-handle">/in/your-handle</a></li>
+        <li><span class="label">github</span><a href="https://github.com/your-handle">/your-handle</a></li>
+      </ul>
+    </div>
+    <p class="fineprint">© 2026 Nabeel Abu Zaineh · Built by hand, like the circuits.</p>
+  </div>
+</footer>
+</body>
+</html>

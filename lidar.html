@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>3D Indoor Spatial Mapper — Nabeel Abu Zaineh</title>
+<meta name="description" content="LIDAR-style 3D indoor spatial mapper built with a VL53L1X ToF sensor, stepper motor, and MSP432E401Y microcontroller, visualized in MATLAB.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@700;800&family=IBM+Plex+Sans:wght@400;600&family=IBM+Plex+Mono:wght@400;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<header>
+  <div class="wrap nav">
+    <a class="brand" href="index.html">nabeel@ece:~$<span class="cursor">█</span></a>
+    <nav aria-label="Main">
+      <ul>
+        <li><a href="index.html">Home</a></li>
+        <li><a href="projects.html" aria-current="page">Projects</a></li>
+        <li><a href="index.html#contact">Contact</a></li>
+      </ul>
+    </nav>
+  </div>
+</header>
+
+<main class="wrap">
+  <div class="detail-hero">
+    <p class="crumb"><a href="projects.html">Projects</a> / PROJ-2DX3-LIDAR</p>
+    <h1>3D Indoor Spatial Mapper</h1>
+    <div class="detail-meta">
+      <span class="tag">C (bare-metal)</span><span class="tag">ARM Cortex-M4F</span>
+      <span class="tag">I²C</span><span class="tag">UART</span><span class="tag">MATLAB</span>
+      <span class="tag">COMPENG 2DX3</span>
+    </div>
+  </div>
+
+  <div class="detail-body">
+    <h2><span class="num">1.0</span>Overview</h2>
+    <p>
+      This project is a LIDAR-style scanner that maps indoor spaces in three dimensions.
+      A VL53L1X time-of-flight distance sensor is mounted on a 28BYJ-48 stepper motor and
+      rotated through a full 360°, sampling distances at fixed angular increments. An
+      MSP-EXP432E401Y microcontroller orchestrates the whole system: driving the motor,
+      reading the sensor over I²C, and streaming measurements to a PC over UART. On the PC
+      side, MATLAB converts each (angle, distance) sample into Cartesian coordinates and
+      renders the scanned environment as a 3D point cloud.
+    </p>
+    <div class="fig-slot">
+      <strong>FIGURE SLOT</strong>
+      Add a photo of the assembled scanner or a MATLAB point-cloud render here.<br>
+      Replace this div with: &lt;figure class="site-fig"&gt;&lt;img src="img/lidar.jpg" alt="..."&gt;&lt;figcaption&gt;...&lt;/figcaption&gt;&lt;/figure&gt;
+    </div>
+
+    <h2><span class="num">2.0</span>System Architecture</h2>
+    <p>The system is a pipeline with three stages:</p>
+    <ol>
+      <li><strong>Acquisition</strong> — the VL53L1X measures distance by timing the return of an emitted infrared pulse. The MCU polls it over I²C at each angular step.</li>
+      <li><strong>Actuation &amp; control</strong> — the stepper motor advances the sensor by a fixed angular increment per sample; the firmware keeps the motor position and measurement index synchronized so every distance value has a known angle. Vertical displacement between scan planes provides the third dimension.</li>
+      <li><strong>Transmission &amp; reconstruction</strong> — samples are framed and sent over UART. MATLAB parses the stream, applies the trigonometric transform from polar samples to (x, y, z) points, and renders the point cloud.</li>
+    </ol>
+    <table class="specs">
+      <caption>System specifications</caption>
+      <tr><th>MCU</th><td>TI MSP-EXP432E401Y (ARM Cortex-M4F)</td></tr>
+      <tr><th>Sensor</th><td>ST VL53L1X time-of-flight, I²C interface</td></tr>
+      <tr><th>Actuation</th><td>28BYJ-48 stepper motor + ULN2003 driver board</td></tr>
+      <tr><th>Data link</th><td>UART (MCU → PC)</td></tr>
+      <tr><th>Reconstruction</th><td>MATLAB, 3D point-cloud rendering</td></tr>
+      <tr><th>Firmware</th><td>Bare-metal C</td></tr>
+    </table>
+
+    <h2><span class="num">3.0</span>Engineering Challenges</h2>
+    <p>
+      The most instructive problems in this project were integration problems — each
+      subsystem worked alone, and the difficulty was making them work together:
+    </p>
+    <ul>
+      <li>
+        <strong>Motor / I²C interference.</strong> Driving the stepper corrupted I²C
+        transactions with the sensor. Debugging this required isolating when communication
+        failed relative to motor activity and restructuring the firmware so sensor reads and
+        motor stepping did not conflict.
+      </li>
+      <li>
+        <strong>UART framing.</strong> Getting a reliable, parseable stream into MATLAB
+        meant defining a consistent message format and handling the boundary cases where
+        data arrived split across reads.
+      </li>
+      <li>
+        <strong>Coordinate reconstruction.</strong> Mapping (step index, distance) into a
+        consistent 3D frame required careful bookkeeping of angular position, scan-plane
+        height, and sensor orientation — errors here showed up visually as warped or
+        spiraled point clouds, which made MATLAB rendering a genuinely useful debugging tool.
+      </li>
+    </ul>
+
+    <div class="callout">
+      <p class="callout-label">Documentation</p>
+      <p>
+        The full system — hardware, firmware architecture, communication protocols, and
+        results — was documented in an IEEE-style technical report, including block
+        diagrams, flowcharts, and analysis of measurement accuracy.
+      </p>
+    </div>
+
+    <h2><span class="num">4.0</span>What I Took Away</h2>
+    <p>
+      This was my first complete embedded system: sensing, actuation, communication, and
+      visualization in one loop. The biggest lesson was that embedded debugging is about
+      forming hypotheses you can test with instrumentation — scoping lines, adding UART
+      breadcrumbs, and changing one variable at a time — rather than staring at code.
+    </p>
+  </div>
+
+  <div class="proj-pager">
+    <a class="btn" href="projects.html">← All projects</a>
+    <a class="btn" href="xor.html">Next: XOR Gate →</a>
+  </div>
+</main>
+
+<footer id="contact">
+  <div class="wrap">
+    <div class="foot-grid">
+      <div>
+        <h2>Contact</h2>
+        <p>Open to co-op roles in hardware, embedded, or test engineering.</p>
+      </div>
+      <ul class="contact-list">
+        <li><span class="label">email</span><a href="mailto:your.email@example.com">your.email@example.com</a></li>
+        <li><span class="label">linkedin</span><a href="https://linkedin.com/in/your-handle">/in/your-handle</a></li>
+        <li><span class="label">github</span><a href="https://github.com/your-handle">/your-handle</a></li>
+      </ul>
+    </div>
+    <p class="fineprint">© 2026 Nabeel Abu Zaineh · Built by hand, like the circuits.</p>
+  </div>
+</footer>
+</body>
+</html>

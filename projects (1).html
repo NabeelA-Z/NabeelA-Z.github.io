@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Projects — Nabeel Abu Zaineh</title>
+<meta name="description" content="Hardware, embedded, and circuit design projects by Nabeel Abu Zaineh: 3D LIDAR mapper, CMOS XOR gates, MOSFET switches, BJT amplifier, and more.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@700;800&family=IBM+Plex+Sans:wght@400;600&family=IBM+Plex+Mono:wght@400;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<header>
+  <div class="wrap nav">
+    <a class="brand" href="index.html">nabeel@ece:~$<span class="cursor">█</span></a>
+    <nav aria-label="Main">
+      <ul>
+        <li><a href="index.html">Home</a></li>
+        <li><a href="projects.html" aria-current="page">Projects</a></li>
+        <li><a href="index.html#contact">Contact</a></li>
+      </ul>
+    </nav>
+  </div>
+</header>
+
+<main>
+  <section class="hero wrap" style="padding-bottom: 24px;">
+    <p class="eyebrow">Design → Simulate → Build → Measure</p>
+    <h1>Project <span class="accent">Log</span></h1>
+    <p class="tagline">
+      Each project has a dedicated write-up covering the design rationale, testing
+      methodology, measured results, and the tradeoffs behind the decisions.
+    </p>
+  </section>
+
+  <section class="wrap">
+    <div class="proj-grid">
+
+      <article class="proj reveal">
+        <div class="proj-head">
+          <span class="part-no">PROJ-2DX3-LIDAR</span>
+          <span class="status">EMBEDDED SYSTEMS</span>
+        </div>
+        <div class="proj-body">
+          <h3><a href="lidar.html">3D Indoor Spatial Mapper</a></h3>
+          <p>
+            A LIDAR-style scanner that maps indoor spaces in 3D: a VL53L1X time-of-flight
+            sensor rotated by a stepper motor, driven by an MSP432E401Y microcontroller,
+            with point-cloud reconstruction in MATLAB. Sensing, actuation, communication,
+            and visualization in one embedded pipeline.
+          </p>
+          <div class="tags">
+            <span class="tag">C</span><span class="tag">I²C</span><span class="tag">UART</span>
+            <span class="tag">MATLAB</span>
+          </div>
+          <a class="readmore" href="lidar.html">Full write-up →</a>
+        </div>
+      </article>
+
+      <article class="proj reveal">
+        <div class="proj-head">
+          <span class="part-no">PROJ-2EI4-XOR</span>
+          <span class="status">DIGITAL / CMOS</span>
+        </div>
+        <div class="proj-body">
+          <h3><a href="xor.html">Transistor-Level XOR Gate — Two Implementations</a></h3>
+          <p>
+            An XOR gate built from discrete MOSFETs in two logic styles: mobility-balanced
+            static CMOS and pass-transistor logic. Both verified with a logic analyzer and
+            characterized under a 100 nF load — the pass-transistor version cut average
+            propagation delay by 14.2%.
+          </p>
+          <div class="tags">
+            <span class="tag">CMOS sizing</span><span class="tag">Pass-transistor logic</span>
+            <span class="tag">Timing analysis</span>
+          </div>
+          <a class="readmore" href="xor.html">Full write-up →</a>
+        </div>
+      </article>
+
+      <article class="proj reveal">
+        <div class="proj-head">
+          <span class="part-no">PROJ-2EI4-SW</span>
+          <span class="status">ANALOG / MOSFET</span>
+        </div>
+        <div class="proj-body">
+          <h3><a href="switches.html">MOSFET Analog Switch Design &amp; Characterization</a></h3>
+          <p>
+            Two solid-state switches measured against the ideal: R<sub>ON</sub>, leakage,
+            voltage range, and bidirectionality. A single-PMOS design (545 Ω, fully
+            bidirectional, 2.5–5 V) versus a three-transistor design (full 0–5 V range,
+            unidirectional) — a quantified engineering tradeoff.
+          </p>
+          <div class="tags">
+            <span class="tag">MOSFET</span><span class="tag">LTSpice</span>
+            <span class="tag">AD3 / WaveForms</span>
+          </div>
+          <a class="readmore" href="switches.html">Full write-up →</a>
+        </div>
+      </article>
+
+      <article class="proj reveal">
+        <div class="proj-head">
+          <span class="part-no">PROJ-2EI4-AMP</span>
+          <span class="status">ANALOG / BJT</span>
+        </div>
+        <div class="proj-body">
+          <h3><a href="amplifier.html">BJT Common-Collector Amplifier</a></h3>
+          <p>
+            A buffer amplifier designed by hand from the small-signal model to a gain &gt; 0.9
+            spec, verified in LTSpice (0.964) and on hardware (0.91), with linearity
+            confirmed through spectrum, phase, and XY analysis. Simulation and hardware
+            agreed within 5.6%.
+          </p>
+          <div class="tags">
+            <span class="tag">2N3904</span><span class="tag">Small-signal design</span>
+            <span class="tag">Spectrum analysis</span>
+          </div>
+          <a class="readmore" href="amplifier.html">Full write-up →</a>
+        </div>
+      </article>
+
+      <article class="proj reveal">
+        <div class="proj-head">
+          <span class="part-no">PROJ-2PX3-HUB</span>
+          <span class="status">DESIGN / SYSTEMS</span>
+        </div>
+        <div class="proj-body">
+          <h3><a href="hub.html">Centralized Learning Hub</a></h3>
+          <p>
+            A team engineering-design project tackling learning-platform fragmentation at
+            McMaster — stakeholder analysis, requirements definition, concept generation and
+            evaluation, and formal presentation and report deliverables.
+          </p>
+          <div class="tags">
+            <span class="tag">Design process</span><span class="tag">Stakeholder analysis</span>
+            <span class="tag">Technical writing</span>
+          </div>
+          <a class="readmore" href="hub.html">Full write-up →</a>
+        </div>
+      </article>
+
+    </div>
+
+    <p style="margin: 40px 0 64px;">
+      <a class="btn" href="index.html">← Back home</a>
+    </p>
+  </section>
+</main>
+
+<footer id="contact">
+  <div class="wrap">
+    <div class="foot-grid">
+      <div>
+        <h2>Contact</h2>
+        <p>Open to co-op roles in hardware, embedded, or test engineering.</p>
+      </div>
+      <ul class="contact-list">
+        <li><span class="label">email</span><a href="mailto:your.email@example.com">your.email@example.com</a></li>
+        <li><span class="label">linkedin</span><a href="https://linkedin.com/in/your-handle">/in/your-handle</a></li>
+        <li><span class="label">github</span><a href="https://github.com/your-handle">/your-handle</a></li>
+      </ul>
+    </div>
+    <p class="fineprint">© 2026 Nabeel Abu Zaineh · Built by hand, like the circuits.</p>
+  </div>
+</footer>
+
+<script>
+  const io = new IntersectionObserver((entries) => {
+    entries.forEach(e => { if (e.isIntersecting) { e.target.classList.add('in'); io.unobserve(e.target); } });
+  }, { threshold: 0.12 });
+  document.querySelectorAll('.reveal').forEach(el => io.observe(el));
+</script>
+</body>
+</html>

@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MOSFET Analog Switches — Nabeel Abu Zaineh</title>
+<meta name="description" content="Design and characterization of two MOSFET-based analog switches: on-resistance, leakage, voltage range, and bidirectionality quantified against the ideal switch.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@700;800&family=IBM+Plex+Sans:wght@400;600&family=IBM+Plex+Mono:wght@400;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<header>
+  <div class="wrap nav">
+    <a class="brand" href="index.html">nabeel@ece:~$<span class="cursor">█</span></a>
+    <nav aria-label="Main">
+      <ul>
+        <li><a href="index.html">Home</a></li>
+        <li><a href="projects.html" aria-current="page">Projects</a></li>
+        <li><a href="index.html#contact">Contact</a></li>
+      </ul>
+    </nav>
+  </div>
+</header>
+
+<main class="wrap">
+  <div class="detail-hero">
+    <p class="crumb"><a href="projects.html">Projects</a> / PROJ-2EI4-SW</p>
+    <h1>MOSFET Analog Switch Design &amp; Characterization</h1>
+    <div class="detail-meta">
+      <span class="tag">PMOS / NMOS</span><span class="tag">LTSpice</span>
+      <span class="tag">AD3 / WaveForms</span><span class="tag">Breadboarding</span>
+      <span class="tag">ELECENG 2EI4</span>
+    </div>
+  </div>
+
+  <div class="detail-body">
+    <h2><span class="num">1.0</span>Overview</h2>
+    <p>
+      An ideal switch has zero on-resistance, infinite off-resistance, no voltage limits,
+      and works in both directions. Real switches have none of those properties — the
+      engineering is in knowing <em>how far</em> a real design falls from ideal, and which
+      non-idealities matter for the application. This project designed two MOSFET-based
+      switches for 0–5 V operation and quantified each against the ideal:
+      R<sub>ON</sub>, off-state leakage, usable voltage range, and bidirectionality.
+    </p>
+
+    <h2><span class="num">2.0</span>Testing Methodology</h2>
+    <p>Each parameter was tied to a specific measurement:</p>
+    <ul>
+      <li><strong>R<sub>ON</sub></strong> — measure V<sub>ON</sub> across the switch and I<sub>ON</sub> through it during the ON state; R<sub>ON</sub> = V<sub>ON</sub>/I<sub>ON</sub>.</li>
+      <li><strong>I<sub>OFF</sub> (leakage)</strong> — measure the voltage across the load resistor in the OFF state and apply Ohm's law; drain–source voltage gives R<sub>OFF</sub>.</li>
+      <li><strong>Voltage range</strong> — sweep V<sub>IN</sub> from 0 to 5 V in 0.5 V steps and record V<sub>OUT</sub> to find where the switch passes the signal faithfully.</li>
+      <li><strong>Bidirectionality</strong> — swap source and load between the two switch terminals, re-measure V<sub>ON</sub> and I<sub>ON</sub>, and record the percent difference.</li>
+    </ul>
+    <p>
+      All measurements used a 1 kHz square-wave control signal from the AD3's waveform
+      generator, with the scope, cursors, and math channels in WaveForms for extraction.
+    </p>
+
+    <h2><span class="num">3.0</span>Switch 1 — Single PMOS</h2>
+    <p>
+      The first design is deliberately minimal: one PMOS pass device with its bulk tied to a
+      separate 5 V supply. Simplicity buys two things — very low on-resistance and full
+      bidirectionality, since with the bulk tied high, either non-gate terminal can act as
+      source or drain.
+    </p>
+    <div class="fig-slot">
+      <strong>FIGURE SLOT</strong>
+      Add the Switch 1 LTSpice schematic and breadboard photo here.
+    </div>
+    <table class="specs">
+      <caption>Switch 1 — measured characteristics</caption>
+      <tr><th>V<sub>ON</sub></th><td>90.1 mV</td></tr>
+      <tr><th>I<sub>ON</sub></th><td>165.4 µA</td></tr>
+      <tr><th>R<sub>ON</sub></th><td>545 Ω</td></tr>
+      <tr><th>I<sub>OFF</sub></th><td>1.80 µA</td></tr>
+      <tr><th>R<sub>OFF</sub></th><td>2.78 MΩ</td></tr>
+      <tr><th>Operating range</th><td>2.5 – 5 V</td></tr>
+      <tr><th>Bidirectional</th><td>Yes — I<sub>ON</sub> differs by 0.012% between orientations</td></tr>
+    </table>
+    <p>
+      The 2.5 V lower limit is the fundamental PMOS constraint: the device only conducts
+      when |V<sub>GS</sub>| exceeds |V<sub>T</sub>|, so low input voltages can't turn it on.
+      Within its range, though, it operates in the linear (triode) region with very small
+      drop between terminals.
+    </p>
+
+    <h2><span class="num">4.0</span>Switch 2 — Two PMOS + NMOS</h2>
+    <p>
+      The second design attacks Switch 1's limited range. A three-transistor topology
+      (two PMOS, one NMOS) extends the usable range at the output node to the full 0–5 V —
+      verified with a V<sub>IN</sub> sweep showing faithful tracking from 0 V
+      (V<sub>OUT</sub> = 0) up to 5 V (V<sub>OUT</sub> = 5.00 V).
+    </p>
+    <div class="fig-slot">
+      <strong>FIGURE SLOT</strong>
+      Add the Switch 2 schematic, breadboard photo, and the reverse-direction SPICE result here.
+    </div>
+    <table class="specs">
+      <caption>Switch 2 — measured characteristics (nodes V<sub>b</sub> / V<sub>a</sub>)</caption>
+      <tr><th>Parameter</th><th>V<sub>b</sub> node</th><th>V<sub>a</sub> node</th></tr>
+      <tr><td>V<sub>ON</sub></td><td>14.13 mV</td><td>27 mV</td></tr>
+      <tr><td>R<sub>ON</sub></td><td>1324 Ω</td><td>2507 Ω</td></tr>
+      <tr><td>I<sub>OFF</sub></td><td>128.54 nA</td><td>257.07 nA</td></tr>
+      <tr><td>Operating range</td><td>0 – 5 V</td><td>2.5 – 5 V</td></tr>
+    </table>
+    <p>
+      The cost is bidirectionality: because one PMOS gate is driven by the output of
+      another, the topology only works in one orientation. A SPICE simulation with the
+      terminals swapped confirmed the failure — the output that should have oscillated
+      between 2.5 and 5 V did not track correctly.
+    </p>
+
+    <h2><span class="num">5.0</span>Tradeoff Analysis</h2>
+    <table class="specs">
+      <caption>Design comparison</caption>
+      <tr><th>Property</th><th>Switch 1 (1× PMOS)</th><th>Switch 2 (2× PMOS + NMOS)</th></tr>
+      <tr><td>Complexity</td><td>Minimal</td><td>Higher (3 devices)</td></tr>
+      <tr><td>R<sub>ON</sub></td><td>545 Ω</td><td>1.32 – 2.51 kΩ</td></tr>
+      <tr><td>Leakage</td><td>1.80 µA</td><td>129 – 257 nA (~10× lower)</td></tr>
+      <tr><td>Voltage range</td><td>2.5 – 5 V</td><td>0 – 5 V (output node)</td></tr>
+      <tr><td>Bidirectional</td><td>Yes</td><td>No</td></tr>
+    </table>
+    <div class="callout">
+      <p class="callout-label">Engineering judgment</p>
+      <p>
+        Neither switch is "better" — they occupy different points on the design space.
+        Switch 1 wins where simplicity and bidirectionality matter and signals stay above
+        2.5 V; Switch 2 wins where full-range operation is required and current only flows
+        one way (which covers most practical switching applications). Both R<sub>ON</sub>
+        values are negligible next to the 470 kΩ resistors in the surrounding circuit, so
+        neither meaningfully loads the signal path.
+      </p>
+    </div>
+  </div>
+
+  <div class="proj-pager">
+    <a class="btn" href="xor.html">← Prev: XOR Gate</a>
+    <a class="btn" href="amplifier.html">Next: BJT Amplifier →</a>
+  </div>
+</main>
+
+<footer id="contact">
+  <div class="wrap">
+    <div class="foot-grid">
+      <div>
+        <h2>Contact</h2>
+        <p>Open to co-op roles in hardware, embedded, or test engineering.</p>
+      </div>
+      <ul class="contact-list">
+        <li><span class="label">email</span><a href="mailto:your.email@example.com">your.email@example.com</a></li>
+        <li><span class="label">linkedin</span><a href="https://linkedin.com/in/your-handle">/in/your-handle</a></li>
+        <li><span class="label">github</span><a href="https://github.com/your-handle">/your-handle</a></li>
+      </ul>
+    </div>
+    <p class="fineprint">© 2026 Nabeel Abu Zaineh · Built by hand, like the circuits.</p>
+  </div>
+</footer>
+</body>
+</html>
