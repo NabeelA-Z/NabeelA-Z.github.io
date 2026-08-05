@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Projects — Nabeel Abu Zaineh</title>
+<meta name="description" content="Hardware, embedded, and circuit design projects by Nabeel Abu Zaineh: 3D LIDAR mapper, CMOS XOR gates, MOSFET switches, BJT amplifier, and more.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@700;800&family=IBM+Plex+Sans:wght@400;600&family=IBM+Plex+Mono:wght@400;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<header>
+  <div class="wrap nav">
+    <a class="brand" href="index.html">nabeel@ece:~$<span class="cursor">█</span></a>
+    <nav aria-label="Main">
+      <ul>
+        <li><a href="index.html">Home</a></li>
+        <li><a href="projects.html" aria-current="page">Projects</a></li>
+        <li><a href="index.html#contact">Contact</a></li>
+      </ul>
+    </nav>
+  </div>
+</header>
+
+<main>
+  <section class="hero wrap" style="padding-bottom: 24px;">
+    <p class="eyebrow">Design → Simulate → Build → Measure</p>
+    <h1>Project <span class="accent">Log</span></h1>
+    <p class="tagline">
+      Each entry follows the same discipline as a datasheet: what it is, how it was designed,
+      and the measured numbers that prove it works.
+    </p>
+  </section>
+
+  <section class="wrap">
+    <div class="proj-grid">
+
+      <!-- ================= LIDAR ================= -->
+      <article class="proj reveal" id="lidar">
+        <div class="proj-head">
+          <span class="part-no">PROJ-2DX3-LIDAR</span>
+          <span class="status">EMBEDDED SYSTEMS</span>
+        </div>
+        <div class="proj-body">
+          <h3>3D Indoor Spatial Mapper</h3>
+          <p>
+            A LIDAR-style scanner that produces 3D point-cloud maps of indoor spaces. A
+            VL53L1X time-of-flight sensor is rotated through 360° by a 28BYJ-48 stepper
+            motor while an MSP-EXP432E401Y microcontroller collects distance samples over
+            I²C and streams them to a PC over UART, where MATLAB reconstructs and renders
+            the scanned environment as a 3D point cloud.
+          </p>
+          <p>
+            <strong>Engineering challenges solved:</strong> electrical interference between
+            the stepper driver and the I²C bus, reliable UART framing between firmware and
+            MATLAB, and coordinate transformation from (angle, distance) samples into a
+            consistent 3D space. Fully documented in an IEEE-style technical report.
+          </p>
+          <table class="specs">
+            <caption>System specifications</caption>
+            <tr><th>MCU</th><td>TI MSP-EXP432E401Y (ARM Cortex-M4F)</td></tr>
+            <tr><th>Sensor</th><td>VL53L1X time-of-flight (I²C)</td></tr>
+            <tr><th>Actuation</th><td>28BYJ-48 stepper + ULN2003 driver</td></tr>
+            <tr><th>Data link</th><td>UART to PC</td></tr>
+            <tr><th>Visualization</th><td>MATLAB 3D point cloud</td></tr>
+          </table>
+          <div class="tags">
+            <span class="tag">C</span><span class="tag">I²C</span><span class="tag">UART</span>
+            <span class="tag">MATLAB</span><span class="tag">Firmware debugging</span>
+          </div>
+        </div>
+      </article>
+
+      <!-- ================= XOR ================= -->
+      <article class="proj reveal" id="xor">
+        <div class="proj-head">
+          <span class="part-no">PROJ-2EI4-XOR</span>
+          <span class="status">DIGITAL / CMOS</span>
+        </div>
+        <div class="proj-body">
+          <h3>Transistor-Level XOR Gate — CMOS &amp; Pass-Transistor</h3>
+          <p>
+            An XOR gate designed and built entirely from discrete MOSFETs, in two
+            implementations. The first is a static CMOS design with complementary pull-up
+            (PMOS) and pull-down (NMOS) networks, sized at a 2.5:1 PMOS:NMOS ratio to
+            balance switching delays against hole vs. electron mobility. The second is a
+            pass-transistor implementation of the same function.
+          </p>
+          <p>
+            Both circuits were verified with the AD3's logic analyzer across all input
+            combinations, then characterized under a 100 nF capacitive load to extract rise,
+            fall, and propagation delays. The static design was also shown to be fully
+            bidirectional (Y = A ⊕ B and Y = B ⊕ A), with clean rail-to-rail levels
+            (V<sub>H</sub> = 5 V, V<sub>L</sub> = 0 V).
+          </p>
+          <table class="specs">
+            <caption>Measured timing (100 nF load, 1 kHz)</caption>
+            <tr><th>Parameter</th><th>Static CMOS</th><th>Pass-transistor</th></tr>
+            <tr><td>t<sub>rise</sub></td><td>333 µs</td><td>340 µs</td></tr>
+            <tr><td>t<sub>fall</sub></td><td>308 µs</td><td>310 µs</td></tr>
+            <tr><td>τ<sub>p</sub> (avg. prop. delay)</td><td>161.5 µs</td><td>138.5 µs (−14.2%)</td></tr>
+          </table>
+          <div class="tags">
+            <span class="tag">CMOS sizing</span><span class="tag">Pass-transistor logic</span>
+            <span class="tag">LTSpice</span><span class="tag">Logic analyzer</span><span class="tag">Timing analysis</span>
+          </div>
+        </div>
+      </article>
+
+      <!-- ================= SWITCHES ================= -->
+      <article class="proj reveal" id="switches">
+        <div class="proj-head">
+          <span class="part-no">PROJ-2EI4-SW</span>
+          <span class="status">ANALOG / MOSFET</span>
+        </div>
+        <div class="proj-body">
+          <h3>MOSFET Analog Switch Design &amp; Characterization</h3>
+          <p>
+            Two solid-state analog switches designed around PMOS/NMOS devices and evaluated
+            against the properties of an ideal switch: on-resistance, off-state leakage,
+            operating voltage range, and bidirectionality. Each design was simulated in
+            LTSpice, built on a breadboard, and measured with the AD3.
+          </p>
+          <p>
+            <strong>The interesting part is the tradeoff:</strong> the single-PMOS design is
+            simple and fully bidirectional but only operates from 2.5–5 V (limited by
+            V<sub>GS</sub> &gt; V<sub>T</sub>); the three-transistor design extends operation
+            across the full 0–5 V range at the cost of bidirectionality. Choosing between
+            them is a real engineering decision, and both were quantified to support it.
+          </p>
+          <table class="specs">
+            <caption>Measured characteristics</caption>
+            <tr><th>Parameter</th><th>Switch 1 (1× PMOS)</th><th>Switch 2 (2× PMOS + NMOS)</th></tr>
+            <tr><td>R<sub>ON</sub></td><td>545 Ω</td><td>1.32–2.51 kΩ</td></tr>
+            <tr><td>I<sub>OFF</sub> (leakage)</td><td>1.80 µA</td><td>129–257 nA</td></tr>
+            <tr><td>Operating range</td><td>2.5–5 V</td><td>0–5 V (output node)</td></tr>
+            <tr><td>Bidirectional</td><td>Yes (0.012% asymmetry)</td><td>No</td></tr>
+          </table>
+          <div class="tags">
+            <span class="tag">MOSFET</span><span class="tag">LTSpice</span>
+            <span class="tag">Breadboarding</span><span class="tag">AD3 / WaveForms</span>
+          </div>
+        </div>
+      </article>
+
+      <!-- ================= AMPLIFIER ================= -->
+      <article class="proj reveal" id="amplifier">
+        <div class="proj-head">
+          <span class="part-no">PROJ-2EI4-AMP</span>
+          <span class="status">ANALOG / BJT</span>
+        </div>
+        <div class="proj-body">
+          <h3>BJT Common-Collector Amplifier</h3>
+          <p>
+            A buffer amplifier designed to meet a gain &gt; 0.9 (attenuation &lt; 10%) spec
+            while maintaining linearity. Starting from the small-signal model, I derived the
+            required transconductance (g<sub>m</sub> ≥ 990 mS), input resistance, and bias
+            network values by hand, then selected a 2N3904 in common-collector topology.
+          </p>
+          <p>
+            The design was validated in three stages: LTSpice transient simulation, physical
+            measurement on hardware, and linearity verification via spectrum analysis, phase
+            measurements at 1 Hz / 1 kHz / 5 kHz, and XY plots. Simulation and hardware
+            agreed within 5.6%, attributable to component tolerances.
+          </p>
+          <table class="specs">
+            <caption>Results vs. specification</caption>
+            <tr><th>Metric</th><th>Spec</th><th>Simulated</th><th>Measured</th></tr>
+            <tr><td>Gain</td><td>&gt; 0.9</td><td>0.964</td><td>0.91</td></tr>
+            <tr><td>Attenuation</td><td>&lt; 10%</td><td>3.58%</td><td>~9%</td></tr>
+            <tr><td>Phase @ 5 kHz</td><td>small</td><td>—</td><td>0.06°</td></tr>
+          </table>
+          <div class="tags">
+            <span class="tag">BJT small-signal design</span><span class="tag">LTSpice</span>
+            <span class="tag">Spectrum analysis</span><span class="tag">2N3904</span>
+          </div>
+        </div>
+      </article>
+
+      <!-- ================= LEARNING HUB ================= -->
+      <article class="proj reveal" id="hub">
+        <div class="proj-head">
+          <span class="part-no">PROJ-2PX3-HUB</span>
+          <span class="status">DESIGN / SYSTEMS</span>
+        </div>
+        <div class="proj-body">
+          <h3>Centralized Learning Hub — Engineering Design Project</h3>
+          <p>
+            A team design project addressing platform fragmentation at McMaster, where course
+            content is scattered across Avenue/LMS, Teams, OneDrive, and email. Following a
+            structured engineering design process, we produced stakeholder analyses,
+            requirement definitions, concept generation and evaluation, a final design
+            proposal, and formal presentation and report deliverables.
+          </p>
+          <div class="tags">
+            <span class="tag">Design process</span><span class="tag">Stakeholder analysis</span>
+            <span class="tag">Technical writing</span><span class="tag">Teamwork</span>
+          </div>
+        </div>
+      </article>
+
+    </div>
+
+    <p style="margin: 40px 0 64px;">
+      <a class="btn" href="index.html">← Back home</a>
+    </p>
+  </section>
+</main>
+
+<footer id="contact">
+  <div class="wrap">
+    <div class="foot-grid">
+      <div>
+        <h2>Contact</h2>
+        <p>Open to co-op roles in hardware, embedded, or test engineering.</p>
+      </div>
+      <ul class="contact-list">
+        <li><span class="label">email</span><a href="mailto:your.email@example.com">your.email@example.com</a></li>
+        <li><span class="label">linkedin</span><a href="https://linkedin.com/in/your-handle">/in/your-handle</a></li>
+        <li><span class="label">github</span><a href="https://github.com/your-handle">/your-handle</a></li>
+      </ul>
+    </div>
+    <p class="fineprint">© 2026 Nabeel Abu Zaineh · Built by hand, like the circuits.</p>
+  </div>
+</footer>
+
+<script>
+  const io = new IntersectionObserver((entries) => {
+    entries.forEach(e => { if (e.isIntersecting) { e.target.classList.add('in'); io.unobserve(e.target); } });
+  }, { threshold: 0.12 });
+  document.querySelectorAll('.reveal').forEach(el => io.observe(el));
+</script>
+</body>
+</html>

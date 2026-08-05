@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Nabeel Abu Zaineh — Electrical &amp; Computer Engineering</title>
+<meta name="description" content="Portfolio of Nabeel Abu Zaineh, Electrical & Computer Engineering (Co-op) student at McMaster University. Embedded systems, circuit design, and hardware projects.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@700;800&family=IBM+Plex+Sans:wght@400;600&family=IBM+Plex+Mono:wght@400;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<header>
+  <div class="wrap nav">
+    <a class="brand" href="index.html">nabeel@ece:~$<span class="cursor">█</span></a>
+    <nav aria-label="Main">
+      <ul>
+        <li><a href="index.html" aria-current="page">Home</a></li>
+        <li><a href="projects.html">Projects</a></li>
+        <li><a href="#contact">Contact</a></li>
+      </ul>
+    </nav>
+  </div>
+</header>
+
+<main>
+  <!-- ============ HERO ============ -->
+  <section class="hero wrap">
+    <p class="eyebrow">Electrical &amp; Computer Engineering · Co-op · McMaster University</p>
+    <h1>Nabeel <span class="accent">Abu Zaineh</span></h1>
+    <p class="tagline">
+      Second-year ECE student who likes taking circuits from schematic to breadboard to
+      measurement. I build embedded systems, design and characterize analog and digital
+      circuits, and write up the results properly.
+    </p>
+    <div class="cta-row">
+      <a class="btn primary" href="projects.html">View projects →</a>
+      <a class="btn" href="#contact">Get in touch</a>
+    </div>
+
+    <!-- Signature element: oscilloscope trace -->
+    <figure class="scope" aria-hidden="true">
+      <div class="scope-label">
+        <span>CH1 — 2 V/div</span>
+        <span>t — 200 µs/div</span>
+      </div>
+      <svg viewBox="0 0 1200 110" preserveAspectRatio="none">
+        <!-- square wave (CH1, blue) -->
+        <polyline class="trace" points="0,85 90,85 90,25 210,25 210,85 330,85 330,25 450,25 450,85 570,85 570,25 690,25 690,85 810,85 810,25 930,25 930,85 1050,85 1050,25 1200,25"/>
+        <!-- RC-charged response (CH2, copper) -->
+        <path class="trace ghost" d="M0,85 L90,85 C110,35 130,28 210,26 L210,26 C230,76 250,83 330,84 C350,34 370,27 450,25 C470,75 490,82 570,84 C590,34 610,27 690,25 C710,75 730,82 810,84 C830,34 850,27 930,25 C950,75 970,82 1050,84 C1070,34 1090,27 1200,25"/>
+      </svg>
+    </figure>
+  </section>
+
+  <!-- ============ ABOUT ============ -->
+  <section class="wrap reveal" id="about">
+    <div class="sec-head"><span class="num">1.0</span><h2>About</h2></div>
+    <div class="about-grid">
+      <div>
+        <p>
+          I'm a second-year Electrical and Computer Engineering (Co-op) student at McMaster
+          University in Hamilton, Ontario. My coursework and projects span embedded systems,
+          analog and digital circuit design, and algorithms — but what I enjoy most is the
+          full loop: calculating a design by hand, simulating it in LTSpice, building it on a
+          breadboard, and verifying it with real instrumentation.
+        </p>
+        <p>
+          Recent work includes a LIDAR-style 3D spatial mapper built around a time-of-flight
+          sensor and an ARM microcontroller, CMOS logic gates designed and characterized at
+          the transistor level, and a BJT amplifier designed to a gain spec and validated
+          against simulation. I document everything in IEEE-style technical reports.
+        </p>
+        <p>
+          I'm currently seeking co-op opportunities where I can contribute to hardware,
+          embedded, or test engineering teams.
+        </p>
+      </div>
+      <dl class="factsheet" aria-label="Quick facts">
+        <div><dt>Program</dt><dd>ECE (Co-op)</dd></div>
+        <div><dt>School</dt><dd>McMaster Univ.</dd></div>
+        <div><dt>Year</dt><dd>2nd</dd></div>
+        <div><dt>Location</dt><dd>Hamilton, ON</dd></div>
+        <div><dt>Status</dt><dd>Seeking co-op</dd></div>
+        <div><dt>Languages</dt><dd>EN · AR · FR (A2)</dd></div>
+      </dl>
+    </div>
+  </section>
+
+  <!-- ============ SKILLS ============ -->
+  <section class="wrap reveal" id="skills">
+    <div class="sec-head"><span class="num">2.0</span><h2>Toolbox</h2></div>
+    <div class="skills-grid">
+      <div class="skill-card">
+        <h3>Embedded</h3>
+        <ul>
+          <li>C (bare-metal, ARM Cortex-M)</li>
+          <li>I²C · UART · GPIO</li>
+          <li>Stepper motor control</li>
+          <li>MSP432E401Y platform</li>
+        </ul>
+      </div>
+      <div class="skill-card">
+        <h3>Circuits</h3>
+        <ul>
+          <li>BJT &amp; MOSFET design</li>
+          <li>CMOS logic (static &amp; pass-transistor)</li>
+          <li>Amplifiers, switches, DACs</li>
+          <li>Timing &amp; delay analysis</li>
+        </ul>
+      </div>
+      <div class="skill-card">
+        <h3>Test &amp; Simulation</h3>
+        <ul>
+          <li>LTSpice</li>
+          <li>Analog Discovery 3 + WaveForms</li>
+          <li>Oscilloscope / logic analyzer</li>
+          <li>MATLAB (3D visualization)</li>
+        </ul>
+      </div>
+      <div class="skill-card">
+        <h3>Software &amp; Docs</h3>
+        <ul>
+          <li>Python · Java</li>
+          <li>Data structures &amp; algorithms</li>
+          <li>LaTeX · IEEE-style reporting</li>
+          <li>Git</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ FEATURED PROJECTS ============ -->
+  <section class="wrap reveal" id="featured">
+    <div class="sec-head"><span class="num">3.0</span><h2>Featured Projects</h2></div>
+    <div class="proj-grid">
+
+      <article class="proj">
+        <div class="proj-head">
+          <span class="part-no">PROJ-2DX3-LIDAR</span>
+          <span class="status">EMBEDDED SYSTEMS</span>
+        </div>
+        <div class="proj-body">
+          <h3>3D Indoor Spatial Mapper</h3>
+          <p>
+            A LIDAR-style scanner that maps indoor spaces in 3D using a VL53L1X time-of-flight
+            sensor rotated by a stepper motor, driven by an MSP432E401Y microcontroller and
+            visualized as a point cloud in MATLAB.
+          </p>
+          <div class="tags">
+            <span class="tag">C</span><span class="tag">I²C</span><span class="tag">UART</span>
+            <span class="tag">MATLAB</span><span class="tag">ToF sensing</span>
+          </div>
+        </div>
+      </article>
+
+      <article class="proj">
+        <div class="proj-head">
+          <span class="part-no">PROJ-2EI4-XOR</span>
+          <span class="status">DIGITAL / CMOS</span>
+        </div>
+        <div class="proj-body">
+          <h3>Transistor-Level XOR Gate — Two Implementations</h3>
+          <p>
+            A CMOS XOR gate designed, built, and characterized at the transistor level, then
+            re-implemented with pass-transistor logic — cutting propagation delay by ~14%
+            under a 100 nF load.
+          </p>
+          <div class="tags">
+            <span class="tag">CMOS</span><span class="tag">LTSpice</span>
+            <span class="tag">Logic analysis</span><span class="tag">Timing</span>
+          </div>
+        </div>
+      </article>
+
+      <article class="proj">
+        <div class="proj-head">
+          <span class="part-no">PROJ-2EI4-AMP</span>
+          <span class="status">ANALOG</span>
+        </div>
+        <div class="proj-body">
+          <h3>BJT Common-Collector Amplifier</h3>
+          <p>
+            An amplifier designed by hand to a gain &gt; 0.9 spec, verified in LTSpice
+            (gain 0.964), then built and measured on hardware (gain 0.91) with spectrum and
+            phase analysis to confirm linearity.
+          </p>
+          <div class="tags">
+            <span class="tag">BJT</span><span class="tag">LTSpice</span>
+            <span class="tag">AD3</span><span class="tag">Linearity analysis</span>
+          </div>
+        </div>
+      </article>
+
+    </div>
+    <p style="margin-top: 28px;">
+      <a class="btn" href="projects.html">All projects with full specs →</a>
+    </p>
+  </section>
+</main>
+
+<!-- ============ CONTACT / FOOTER ============ -->
+<footer id="contact">
+  <div class="wrap">
+    <div class="foot-grid">
+      <div>
+        <h2>Contact</h2>
+        <p>Open to co-op roles in hardware, embedded, or test engineering. The fastest way to reach me is email.</p>
+      </div>
+      <ul class="contact-list">
+        <li><span class="label">email</span><a href="mailto:your.email@example.com">your.email@example.com</a></li>
+        <li><span class="label">linkedin</span><a href="https://linkedin.com/in/your-handle">/in/your-handle</a></li>
+        <li><span class="label">github</span><a href="https://github.com/your-handle">/your-handle</a></li>
+      </ul>
+    </div>
+    <p class="fineprint">© 2026 Nabeel Abu Zaineh · Built by hand, like the circuits.</p>
+  </div>
+</footer>
+
+<script>
+  // Scroll reveal
+  const io = new IntersectionObserver((entries) => {
+    entries.forEach(e => { if (e.isIntersecting) { e.target.classList.add('in'); io.unobserve(e.target); } });
+  }, { threshold: 0.12 });
+  document.querySelectorAll('.reveal').forEach(el => io.observe(el));
+</script>
+</body>
+</html>
