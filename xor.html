@@ -52,10 +52,10 @@
 
     <h2><span class="num">2.0</span>Design: Transistor Sizing</h2>
     <p>
-      In static CMOS, the pull-up network (PMOS, connecting Y to V<sub>CC</sub>) and
+      In CMOS logic design, the pull-up network (PMOS, connecting Y to V<sub>CC</sub>) and
       pull-down network (NMOS, connecting Y to ground) must have matched switching delays
       to minimize glitches during transitions. PMOS devices conduct with holes and NMOS
-      with electrons — and since electron mobility is roughly 2.5× hole mobility, the PMOS
+      with electrons. Since electron mobility is roughly 2.5× hole mobility, the PMOS
       W/L ratio must be scaled up to compensate:
     </p>
     <table class="specs">
@@ -82,10 +82,14 @@
       A ⊕ B and B ⊕ A identically (fully symmetric inputs). Logic levels were clean
       rail-to-rail: V<sub>H</sub> = 5 V, V<sub>L</sub> = 0 V.
     </p>
-    <div class="fig-slot">
-      <strong>FIGURE SLOT</strong>
-      Add the logic analyzer capture (Figure 3) and static level test scope shots here.
-    </div>
+    <figure class="site-fig">
+      <img src="img/xor-logic.png" alt="Logic Analyzer Result of XOR gate">
+      <figcaption>CMOS XOR gate schematic using AD3</figcaption>
+    </figure>
+    <figure class="site-fig">
+      <img src="img/xor-static.png" alt="Static Testing Result">
+      <figcaption>Static Testing Result</figcaption>
+    </figure>
 
     <h2><span class="num">4.0</span>Timing Characterization</h2>
     <p>
