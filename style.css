@@ -270,6 +270,7 @@ section { padding: 64px 0; }
   border: 1px solid var(--grid);
   padding: 7px 10px;
   text-align: left;
+  background: var(--card);
 }
 .specs th { background: var(--paper); font-weight: 600; }
 
