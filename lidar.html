@@ -66,7 +66,7 @@
       <tr><th>Actuation</th><td>28BYJ-48 stepper motor + ULN2003 driver board</td></tr>
       <tr><th>Data link</th><td>UART (MCU → PC)</td></tr>
       <tr><th>Reconstruction</th><td>MATLAB, 3D point-cloud rendering</td></tr>
-      <tr><th>Firmware</th><td>Bare-metal C</td></tr>
+      <tr><th>Firmware</th><td>C</td></tr>
     </table>
 
     <h2><span class="num">3.0</span>Engineering Challenges</h2>
@@ -90,20 +90,20 @@
         <strong>Coordinate reconstruction.</strong> Mapping (step index, distance) into a
         consistent 3D frame required careful bookkeeping of angular position, scan-plane
         height, and sensor orientation — errors here showed up visually as warped or
-        spiraled point clouds, which made MATLAB rendering a genuinely useful debugging tool.
+        spiraled point clouds, which made MATLAB rendering a useful debugging tool.
       </li>
     </ul>
 
     <div class="callout">
       <p class="callout-label">Documentation</p>
       <p>
-        The full system — hardware, firmware architecture, communication protocols, and
-        results — was documented in an IEEE-style technical report, including block
+        The full system; hardware, firmware architecture, communication protocols, and
+        results was documented in an IEEE-style technical report, including block
         diagrams, flowcharts, and analysis of measurement accuracy.
       </p>
     </div>
 
-    <h2><span class="num">4.0</span>What I Took Away</h2>
+    <h2><span class="num">4.0</span>Takeaways</h2>
     <p>
       This was my first complete embedded system: sensing, actuation, communication, and
       visualization in one loop. The biggest lesson was that embedded debugging is about
