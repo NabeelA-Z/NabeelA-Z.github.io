@@ -360,6 +360,7 @@ footer .fineprint {
 .detail-body li { margin-bottom: 6px; }
 .detail-body .specs { margin: 18px 0 22px; }
 
+/* Dashed stand-in for a figure not yet added — <div class="fig-slot"> */
 .fig-slot {
   border: 1.5px dashed var(--muted);
   background: var(--card);

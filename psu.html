@@ -39,12 +39,10 @@
   <div class="detail-body">
     <h2><span class="num">1.0</span>Overview &amp; Specification</h2>
     <p>
-      The goal: deliver a 3 V DC output at 10 mA from a 120 V, 1 kHz AC source, with ripple
-      held small enough that the output reads as DC — all while keeping every component
+      The goal: deliver a 3 V DC output at 10 mA from a 120 V, 1 kHz AC source, with 0.2V ripple while keeping every component
       inside its power rating. The design chain is a transformer to step the source down, a
       bridge rectifier to make the waveform unipolar, and a capacitive filter to smooth what
-      is left. Hand calculation set the component values; LTSpice and bench measurement
-      confirmed them.
+      is left. Values were hand calculated and confirmed through simulation and prototyping.
     </p>
     <table class="specs">
       <caption>Design targets</caption>
@@ -58,15 +56,15 @@
     <p>
       A full-wave <strong>bridge rectifier</strong> was chosen over half-wave and
       center-tapped alternatives. It costs four diodes instead of one or two, but it
-      rectifies both half-cycles — doubling the ripple frequency to 2 kHz and halving the
+      rectifies both half-cycles, doubling the ripple frequency to 2 kHz and halving the
       capacitor's discharge time between peaks. For the same filter capacitance that means
-      substantially less ripple, which is exactly what a tight 0.2 V budget needs. No
+      substantially less ripple, No
       regulator was used; the filter alone carries the ripple spec.
     </p>
-    <div class="fig-slot">
-      <strong>FIGURE SLOT</strong>
-      Add the LTSpice schematic (bridge rectifier, C1, R1) here.
-    </div>
+    <figure class="site-fig">
+      <img src="img/psu-schematic.png" alt="LTSpice schematic of the bridge rectifier power supply">
+      <figcaption>Circuit schematic in LTSpice — four 1N4148 diodes in a bridge, C1 = 50 µF filter, R1 = 310 Ω load, driven by SINE(0 4.65 1000)</figcaption>
+    </figure>
 
     <h2><span class="num">3.0</span>Hand Design</h2>
     <p>The component values fall out of working backwards from the output spec:</p>
@@ -110,10 +108,10 @@
       with load current between 9.60 mA and 9.83 mA at the 2.45 kHz ripple frequency
       characteristic of full-wave rectification.
     </p>
-    <div class="fig-slot">
-      <strong>FIGURE SLOT</strong>
-      Add the LTSpice output-voltage and load-current cursor captures here.
-    </div>
+    <figure class="site-fig">
+      <img src="img/psu-sim-output.png" alt="LTSpice transient simulation showing output voltage and load current over 10 ms">
+      <figcaption>10 ms transient result — output voltage V(n002) in green (left axis) and load current I(R1) in red (right axis). The capacitor charges over the first ~2 ms, then settles into steady-state sawtooth ripple.</figcaption>
+    </figure>
     <table class="specs">
       <caption>Simulated results (V(n002), I(R1))</caption>
       <tr><th>Metric</th><th>Minimum</th><th>Maximum</th></tr>
@@ -128,10 +126,6 @@
       across the load resistor for output voltage; a WaveForms math channel divided that
       trace by 300 Ω (the resistance actually installed) to read load current directly.
     </p>
-    <div class="fig-slot">
-      <strong>FIGURE SLOT</strong>
-      Add the breadboard photo and the V<sub>out</sub> / I<sub>out</sub> scope captures here.
-    </div>
     <table class="specs">
       <caption>Measured vs. simulated vs. specification</caption>
       <tr><th>Metric</th><th>Spec</th><th>Simulated</th><th>Measured</th></tr>
@@ -159,7 +153,7 @@
       <p class="callout-label">Design tradeoff</p>
       <p>
         The bridge topology costs four diodes and two forward drops per half-cycle instead
-        of one — a real penalty at a 3 V output, where 1.4 V of the input amplitude is spent
+        of one, which is costly at a 3 V output, where 1.4 V of the input amplitude is spent
         on the diodes. It buys 2× the ripple frequency and a proportionally smaller filter
         capacitor for the same ripple. At this spec the ripple budget is the binding
         constraint, so the extra components and headroom are the right thing to spend.
