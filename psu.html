@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>DC Power Supply Design — Nabeel Abu Zaineh</title>
+<meta name="description" content="A bridge-rectifier DC power supply designed by hand to deliver 10 mA at 3 V from a 120 V, 1 kHz AC source, verified in LTSpice and on hardware.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@700;800&family=IBM+Plex+Sans:wght@400;600&family=IBM+Plex+Mono:wght@400;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<header>
+  <div class="wrap nav">
+    <a class="brand" href="index.html">nabeel@ece:~$<span class="cursor">█</span></a>
+    <nav aria-label="Main">
+      <ul>
+        <li><a href="index.html">Home</a></li>
+        <li><a href="projects.html" aria-current="page">Projects</a></li>
+        <li><a href="index.html#contact">Contact</a></li>
+      </ul>
+    </nav>
+  </div>
+</header>
+
+<main class="wrap">
+  <div class="detail-hero">
+    <p class="crumb"><a href="projects.html">Projects</a> / PROJ-2EI4-PSU</p>
+    <h1>Bridge-Rectifier DC Power Supply</h1>
+    <div class="detail-meta">
+      <span class="tag">1N4148</span><span class="tag">Bridge rectifier</span>
+      <span class="tag">LTSpice</span><span class="tag">AD3 / WaveForms</span>
+      <span class="tag">ELECENG 2EI4</span>
+    </div>
+  </div>
+
+  <div class="detail-body">
+    <h2><span class="num">1.0</span>Overview &amp; Specification</h2>
+    <p>
+      The goal: deliver a 3 V DC output at 10 mA from a 120 V, 1 kHz AC source, with ripple
+      held small enough that the output reads as DC — all while keeping every component
+      inside its power rating. The design chain is a transformer to step the source down, a
+      bridge rectifier to make the waveform unipolar, and a capacitive filter to smooth what
+      is left. Hand calculation set the component values; LTSpice and bench measurement
+      confirmed them.
+    </p>
+    <table class="specs">
+      <caption>Design targets</caption>
+      <tr><th>Source</th><td>120 V, 1 kHz AC</td></tr>
+      <tr><th>Output voltage</th><td>3 V DC</td></tr>
+      <tr><th>Output current</th><td>10 mA</td></tr>
+      <tr><th>Ripple budget</th><td>0.2 V peak-to-peak</td></tr>
+    </table>
+
+    <h2><span class="num">2.0</span>Topology Selection</h2>
+    <p>
+      A full-wave <strong>bridge rectifier</strong> was chosen over half-wave and
+      center-tapped alternatives. It costs four diodes instead of one or two, but it
+      rectifies both half-cycles — doubling the ripple frequency to 2 kHz and halving the
+      capacitor's discharge time between peaks. For the same filter capacitance that means
+      substantially less ripple, which is exactly what a tight 0.2 V budget needs. No
+      regulator was used; the filter alone carries the ripple spec.
+    </p>
+    <div class="fig-slot">
+      <strong>FIGURE SLOT</strong>
+      Add the LTSpice schematic (bridge rectifier, C1, R1) here.
+    </div>
+
+    <h2><span class="num">3.0</span>Hand Design</h2>
+    <p>The component values fall out of working backwards from the output spec:</p>
+    <ol>
+      <li>
+        <strong>Peak rectified voltage.</strong> With V<sub>O</sub> = V<sub>p</sub> −
+        V<sub>R</sub>/2 and a 0.2 V ripple around a 3 V average,
+        V<sub>p</sub> = 3 + 0.1 = <strong>3.1 V</strong>.
+      </li>
+      <li>
+        <strong>Input amplitude.</strong> Two diodes conduct in series on each half-cycle.
+        Using the 0.7 V constant-drop model, V<sub>m</sub> = 3.1 + 2(0.7) =
+        <strong>4.5 V</strong>.
+      </li>
+      <li>
+        <strong>Filter capacitor.</strong> C = I<sub>L</sub>/(f·V<sub>R</sub>) =
+        10 mA / (1 kHz × 0.2 V) = <strong>50 µF</strong>.
+      </li>
+      <li>
+        <strong>Load resistor.</strong> R = V<sub>p</sub>/(V<sub>r</sub>·f·C) =
+        3.1 V / (0.2 V × 1 kHz × 50 µF) = <strong>310 Ω</strong>.
+      </li>
+      <li>
+        <strong>Turns ratio.</strong> 4.5 V = 120 V · (N<sub>2</sub>/N<sub>1</sub>), so
+        N<sub>1</sub>:N<sub>2</sub> = <strong>80:3</strong>.
+      </li>
+    </ol>
+    <p>
+      Two substitutions were made between paper and bench. Simulation showed the real diode
+      drop exceeds 0.7 V at ~10 mA, so the source amplitude was raised to
+      <strong>4.65 V</strong> to recover the lost headroom. And on component availability,
+      the built circuit used a 100 µF capacitor and a 300 Ω resistor, with 50 µF / 310 Ω
+      retained for the calculations and simulation.
+    </p>
+
+    <h2><span class="num">4.0</span>Simulation</h2>
+    <p>
+      A 10 ms transient simulation in LTSpice (1N4148 diodes, SINE(0 4.65 1000) source)
+      confirmed the design. Cursor measurements on the settled waveform gave an output
+      swinging between 2.977 V and 3.048 V — a 71.6 mV ripple, inside the 0.2 V budget —
+      with load current between 9.60 mA and 9.83 mA at the 2.45 kHz ripple frequency
+      characteristic of full-wave rectification.
+    </p>
+    <div class="fig-slot">
+      <strong>FIGURE SLOT</strong>
+      Add the LTSpice output-voltage and load-current cursor captures here.
+    </div>
+    <table class="specs">
+      <caption>Simulated results (V(n002), I(R1))</caption>
+      <tr><th>Metric</th><th>Minimum</th><th>Maximum</th></tr>
+      <tr><td>Output voltage</td><td>2.977 V</td><td>3.048 V</td></tr>
+      <tr><td>Load current</td><td>9.602 mA</td><td>9.833 mA</td></tr>
+      <tr><td>Ripple frequency</td><td colspan="2">2.45 kHz</td></tr>
+    </table>
+
+    <h2><span class="num">5.0</span>Hardware Verification</h2>
+    <p>
+      The circuit was built on a breadboard and measured with the AD3. Channel 1 was placed
+      across the load resistor for output voltage; a WaveForms math channel divided that
+      trace by 300 Ω (the resistance actually installed) to read load current directly.
+    </p>
+    <div class="fig-slot">
+      <strong>FIGURE SLOT</strong>
+      Add the breadboard photo and the V<sub>out</sub> / I<sub>out</sub> scope captures here.
+    </div>
+    <table class="specs">
+      <caption>Measured vs. simulated vs. specification</caption>
+      <tr><th>Metric</th><th>Spec</th><th>Simulated</th><th>Measured</th></tr>
+      <tr><td>Output voltage</td><td>3 V</td><td>2.98 – 3.05 V</td><td>2.69 – 2.77 V</td></tr>
+      <tr><td>Ripple (pk-pk)</td><td>&lt; 0.2 V</td><td>71.6 mV</td><td>80 mV</td></tr>
+      <tr><td>Output current</td><td>10 mA</td><td>9.6 – 9.8 mA</td><td>9.1 mA avg</td></tr>
+      <tr><td>Ripple frequency</td><td>2 kHz</td><td>2.45 kHz</td><td>2 kHz</td></tr>
+    </table>
+
+    <h2><span class="num">6.0</span>Discussion</h2>
+    <p>
+      Theory, simulation, and hardware agree in shape and largely in magnitude; the ripple
+      spec is met in all three. The output voltage landed ~0.3 V low on hardware, and the
+      causes are the ones the ideal model deliberately ignores: diode drops that grow with
+      current beyond the 0.7 V assumption, series resistance in the wires and breadboard
+      contacts, and component tolerances on the resistor and capacitor. Measurement itself
+      contributes — AD3 resolution and connection noise both show up in the trace.
+    </p>
+    <p>
+      One bench issue was worth recording: the output voltage fluctuated irregularly during
+      early measurements. Systematic checking traced it to a loose wire connection, and the
+      reading was stable once reseated.
+    </p>
+    <div class="callout">
+      <p class="callout-label">Design tradeoff</p>
+      <p>
+        The bridge topology costs four diodes and two forward drops per half-cycle instead
+        of one — a real penalty at a 3 V output, where 1.4 V of the input amplitude is spent
+        on the diodes. It buys 2× the ripple frequency and a proportionally smaller filter
+        capacitor for the same ripple. At this spec the ripple budget is the binding
+        constraint, so the extra components and headroom are the right thing to spend.
+      </p>
+    </div>
+  </div>
+
+  <div class="proj-pager">
+    <a class="btn" href="amplifier.html">← Prev: BJT Amplifier</a>
+    <a class="btn" href="hub.html">Next: Learning Hub →</a>
+  </div>
+</main>
+
+<footer id="contact">
+  <div class="wrap">
+    <div class="foot-grid">
+      <div>
+        <h2>Contact</h2>
+        <p>Open to co-op roles in hardware, embedded, or test engineering.</p>
+      </div>
+      <ul class="contact-list">
+        <li><span class="label">email</span><a href="mailto:nabeelabuzaineh@gmail.com">nabeelabuzaineh@gmail.com</a></li>
+        <li><span class="label">linkedin</span><a href="https://www.linkedin.com/in/nabeel-abu-zaineh-313452333/">/in/Nabeel-Abu-Zaineh</a></li>
+        <li><span class="label">github</span><a href="https://github.com/NabeelA-Z">/NabeelA-Z</a></li>
+      </ul>
+    </div>
+    <p class="fineprint">© 2026 Nabeel Abu Zaineh</p>
+  </div>
+</footer>
+</body>
+</html>
