@@ -1,0 +1,313 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>USB-C Li-Ion Charger / Boost Converter PCB — Nabeel Abu Zaineh</title>
+<meta name="description" content="A USB-C Li-ion charger and boost converter PCB designed from scratch in KiCad, the first hardware module of a mini scanning rover. Work in progress.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@700;800&family=IBM+Plex+Sans:wght@400;600&family=IBM+Plex+Mono:wght@400;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<header>
+  <div class="wrap nav">
+    <a class="brand" href="index.html">nabeel@ece:~$<span class="cursor">█</span></a>
+    <nav aria-label="Main">
+      <ul>
+        <li><a href="index.html">Home</a></li>
+        <li><a href="projects.html" aria-current="page">Projects</a></li>
+        <li><a href="index.html#contact">Contact</a></li>
+      </ul>
+    </nav>
+  </div>
+</header>
+
+<main class="wrap">
+  <div class="detail-hero">
+    <p class="crumb"><a href="projects.html">Projects</a> / PROJ-SBC-PWR</p>
+    <h1>USB-C Li-Ion Charger &amp; Boost Converter PCB</h1>
+    <div class="detail-meta">
+      <span class="tag">KiCad</span><span class="tag">USB-C</span>
+      <span class="tag">Li-ion charging</span><span class="tag">Boost converter</span>
+      <span class="tag">LTspice</span><span class="tag">2-layer PCB</span>
+    </div>
+    <p class="wip-banner"><strong>Work in progress.</strong> Schematic capture, connector
+      selection, and layout are done. Fabrication, assembly, and bring-up are still ahead.
+      This page tracks the design as it goes.</p>
+  </div>
+
+  <div class="detail-body">
+
+    <h2><span class="num">1.0</span>Why This Board Exists</h2>
+    <p>
+      This is the first hardware module of a larger build: a mini scanning rover, a small
+      mobile robot with LiDAR / time-of-flight scanning capability. Rather than start with
+      the MCU and drivetrain and bolt power on at the end, I designed the power path first
+      as a standalone, reusable module. Charge a Li-ion cell from USB-C, then step that cell
+      voltage up to a stable rail that can run the rover's electronics.
+    </p>
+    <p>
+      Designing it as a separate board has a second payoff. It is a complete from-scratch
+      PCB exercise in its own right, covering schematic capture, connector selection against
+      real datasheets, power electronics, and layout, without the rest of the rover clouding
+      the scope.
+    </p>
+    <table class="specs">
+      <caption>Module definition</caption>
+      <tr><th>Function</th><td>USB-C Li-ion charger with boost converter output</td></tr>
+      <tr><th>Tool</th><td>KiCad (schematic, footprints, layout)</td></tr>
+      <tr><th>Input</th><td>USB-C receptacle, 5 V, power only</td></tr>
+      <tr><th>Storage</th><td>Single Li-ion cell on a dedicated connector</td></tr>
+      <tr><th>Output</th><td>Regulated boost rail on a Mini-USB connector</td></tr>
+      <tr><th>Stackup</th><td>2 layer (F.Cu / B.Cu)</td></tr>
+      <tr><th>Target</th><td>Power module for a mini scanning rover</td></tr>
+    </table>
+
+    <h2><span class="num">2.0</span>Signal Chain</h2>
+    <p>
+      The board is four stages in series, and every design decision below traces back to one
+      of them:
+    </p>
+    <ol>
+      <li><strong>USB-C input.</strong> 5 V in from a standard charger, with the port
+        correctly identifying itself as a power sink.</li>
+      <li><strong>Li-ion charge IC.</strong> Takes VBUS and manages the charge profile into
+        the cell.</li>
+      <li><strong>Boost converter.</strong> Takes the cell voltage, which sags across the
+        discharge curve, and holds a stable higher output rail.</li>
+      <li><strong>Output connector.</strong> Carries the regulated rail off-board to the
+        rover electronics.</li>
+    </ol>
+
+    <div class="fig-slot">
+      <strong>PHOTO SLOT 1</strong>
+      Full schematic in KiCad (input stage through boost output)
+    </div>
+
+    <h2><span class="num">3.0</span>USB-C Input Stage</h2>
+    <p>
+      The input connector is a <strong>GCT USB4105 series</strong> USB-C receptacle, using
+      the KiCad footprint
+      <code>USB_C_Receptacle_GCT_USB4105-xx-A_16P_TopMnt_Horizontal</code>.
+      Selecting it meant cross-referencing the manufacturer datasheet against the library
+      footprint rather than trusting the name alone, since a 16-pin top-mount horizontal
+      part has to match both the pin map and the mechanical footprint at the board edge.
+    </p>
+    <p>
+      The port is wired <strong>power only</strong>. VBUS and GND go to the charge circuit.
+      The detail that matters is the configuration channel: <strong>CC1 and CC2 are each
+      pulled down to GND through 5.1 k&#937;</strong>. Those two resistors are what tell an
+      attached source that this is a standard USB-C power sink asking for default current.
+      Leave them off and a compliant charger will never turn VBUS on, so a two-resistor
+      omission is enough to make the whole board dead on arrival.
+    </p>
+    <p>
+      D+, D&#8722;, and the remaining unused pins are left unconnected, with explicit
+      no-connect flags placed in the schematic so ERC treats them as a deliberate decision
+      instead of an oversight.
+    </p>
+    <div class="callout">
+      <p class="callout-label">Design note</p>
+      <p>
+        The two 5.1 k&#937; resistors are the cheapest components on the board and the most
+        consequential. USB-C sink detection is not optional wiring, it is the handshake that
+        makes the port deliver power at all. They are also placed physically tight to the
+        connector in layout, for the same reason the schematic bothers with them.
+      </p>
+    </div>
+
+    <div class="fig-slot">
+      <strong>PHOTO SLOT 2</strong>
+      USB-C input stage detail: receptacle, CC pull-downs, no-connect flags
+    </div>
+
+    <h2><span class="num">4.0</span>Charge and Boost Path</h2>
+    <p>
+      The charge IC stage sits directly off VBUS and manages charging the Li-ion cell, which
+      connects through its own battery connector so the pack can be swapped or removed from
+      the board. The boost converter then takes that cell voltage and steps it up to the
+      output rail.
+    </p>
+    <p>
+      The boost stage is the part that has to be engineered rather than simply wired. A
+      single Li-ion cell falls from roughly 4.2 V down toward 3.0 V over a discharge, and
+      the rover's electronics need a fixed rail regardless of where the cell sits on that
+      curve. That means the converter's inductor, switch node, and feedback network have to
+      be chosen for the full input range, not just a nominal operating point, which is
+      exactly what the simulation work in section 7.0 is for.
+    </p>
+
+    <h2><span class="num">5.0</span>Output Connector</h2>
+    <p>
+      The regulated output leaves the board on a second connector, planned as
+      <strong>Mini-USB</strong> to match the Mini-USB power input on the target MCU board.
+      Choosing the connector to fit the downstream hardware, rather than dropping in a
+      generic header, keeps the rover build cable-simple later on.
+    </p>
+    <p>
+      Like the input, it is wired power only: VBUS and GND carry the boost output, and
+      D+, D&#8722;, and ID are left no-connected. The footprint under consideration is
+      <code>USB_Mini-B_Lumberg_2486_01</code>, or an equivalent Mini-USB-B receptacle from
+      the same KiCad library, pending a final mechanical check.
+    </p>
+
+    <h2><span class="num">6.0</span>PCB Layout</h2>
+    <p>
+      Placement was done by function, not by convenience, working along the signal chain:
+    </p>
+    <ul>
+      <li><strong>USB-C input at the board edge</strong>, so the cable plugs in from outside
+        the board rather than over it.</li>
+      <li><strong>CC pull-down resistors right at the connector</strong>, keeping the
+        configuration lines short.</li>
+      <li><strong>Charge IC clustered near the VBUS entry</strong>, so the input power path
+        stays short before it does any work.</li>
+      <li><strong>Boost converter section kept tight</strong>, with the inductor, switch
+        node, and feedback grouped together and separated from the noisier areas of the
+        board.</li>
+      <li><strong>Output connector placed last</strong>, at the end of the chain.</li>
+    </ul>
+    <p>
+      Routing followed the same priority split. Power nets (VBUS, battery, boost output) are
+      routed <strong>wide and direct</strong> to hold down resistance and drop at current.
+      The sensitive nets, meaning the CC lines and the boost feedback, are deliberately
+      routed <strong>away from the switching node</strong>, since feedback is the one trace
+      on this board where picked-up switching noise turns straight into a regulation
+      problem.
+    </p>
+    <p>
+      The board is two layer, with vias used to hop from front copper (F.Cu) to back copper
+      (B.Cu) wherever a route could not stay on one side. Working through this surfaced a
+      constraint worth writing down: <strong>an SMD pad exists on only one copper
+      layer</strong>, so a via cannot simply be dropped onto the pad the way it can on a
+      through-hole pin. The via has to sit just off the pad, with a short trace connecting
+      the two.
+    </p>
+    <p>
+      The board outline is defined on Edge.Cuts to physically bound the PCB, sized with
+      clearance around the placed components. Mounting holes are still an open question.
+      They cost nothing but board area, they cannot be added after the board is fabricated,
+      and on a vehicle that moves there is a case for bolting the module to the chassis
+      rather than letting it hang off its own cable. The decision gets made before the
+      fabrication files go out.
+    </p>
+
+    <div class="fig-slot">
+      <strong>PHOTO SLOT 3</strong>
+      PCB layout in KiCad: placement, copper routing, board outline
+    </div>
+    <div class="fig-slot">
+      <strong>PHOTO SLOT 4</strong>
+      3D render of the assembled board
+    </div>
+
+    <h2><span class="num">7.0</span>Simulation Approach</h2>
+    <p>
+      Boost converter behaviour is being validated in <strong>LTspice</strong> before
+      component values are frozen: switching waveforms, inductor current, output ripple, and
+      stability. I started in KiCad's built-in ngspice simulator and moved to LTspice after
+      hitting simulator setup problems that were costing more time than the simulation
+      itself.
+    </p>
+    <p>
+      One deliberate simplification in the model: the USB-C receptacle is replaced with a
+      plain 5 V DC source. A connector is a mechanical part with no meaningful SPICE
+      behaviour to solve for, so modelling it adds nothing. What matters electrically at
+      that point in the circuit is that 5 V is present on VBUS, and that is exactly what the
+      source provides.
+    </p>
+    <div class="fig-slot">
+      <strong>PHOTO SLOT 5</strong>
+      LTspice boost converter model and simulated waveforms (switch node, inductor current, output ripple)
+    </div>
+
+    <h2><span class="num">8.0</span>Background Applied</h2>
+    <p>
+      This board builds on earlier embedded and circuits work rather than starting cold. The
+      <a href="lidar.html">3D spatial mapper</a> put me on the <strong>VL53L1X
+      time-of-flight sensor</strong> over I&#178;C and UART on an
+      <strong>MSP432E401Y</strong>, which is directly the sensing front end the rover will
+      reuse, and TM4C1294 firmware work covers the MCU side. Transistor-level
+      <a href="switches.html">MOSFET</a> and <a href="amplifier.html">BJT</a> analysis is
+      what makes the boost converter's switch node something to reason about instead of a
+      block to copy. The <a href="psu.html">DC power supply</a> project is the same
+      discipline at a smaller scale: design the power path on paper, simulate it, then
+      measure it.
+    </p>
+    <table class="specs">
+      <caption>Skills exercised on this board</caption>
+      <tr><th>Schematic</th><td>Capture and footprint assignment in KiCad, ERC clean-up with no-connect flags</td></tr>
+      <tr><th>Components</th><td>Connector selection and datasheet cross-referencing (GCT USB4105 series)</td></tr>
+      <tr><th>Standards</th><td>USB-C sink-side CC pull-down requirements</td></tr>
+      <tr><th>Layout</th><td>Functional placement, power vs. signal routing priority, 2-layer routing with vias, SMD pad layer constraints, Edge.Cuts outline</td></tr>
+      <tr><th>Validation</th><td>LTspice simulation of switching power electronics</td></tr>
+    </table>
+
+    <h2><span class="num">9.0</span>Status &amp; Next Steps</h2>
+    <p>Where the design stands and what is left:</p>
+    <table class="specs">
+      <caption>Progress</caption>
+      <tr><th>Stage</th><th>State</th></tr>
+      <tr><td>Schematic capture, input stage</td><td>Done</td></tr>
+      <tr><td>USB-C connector selection and CC wiring</td><td>Done</td></tr>
+      <tr><td>Charge IC and boost stage capture</td><td>Done</td></tr>
+      <tr><td>Component placement and routing</td><td>Done</td></tr>
+      <tr><td>Mini-USB output footprint and wiring</td><td>In progress</td></tr>
+      <tr><td>Board outline (Edge.Cuts)</td><td>Done</td></tr>
+      <tr><td>Mounting holes</td><td>Under review, decide before fabrication</td></tr>
+      <tr><td>LTspice boost validation</td><td>In progress</td></tr>
+      <tr><td>Final DRC / ERC</td><td>Pending</td></tr>
+      <tr><td>Fabrication and assembly</td><td>Pending</td></tr>
+      <tr><td>Bring-up and load testing</td><td>Pending</td></tr>
+    </table>
+    <p>
+      Bring-up will check the two things the design is actually claiming: that charge
+      behaviour into the cell is correct, and that the boost output holds its voltage under
+      load across the cell's discharge range. After that the module gets integrated with the
+      rover's MCU and the VL53L1X sensor, which is the point of the whole exercise.
+    </p>
+    <div class="fig-slot">
+      <strong>PHOTO SLOT 6</strong>
+      Fabricated and assembled board (to be added after bring-up)
+    </div>
+    <div class="fig-slot">
+      <strong>PHOTO SLOT 7</strong>
+      Bench test setup and measured results (to be added after bring-up)
+    </div>
+
+    <div class="callout">
+      <p class="callout-label">Where this is going</p>
+      <p>
+        The rover needs power, motion, and sensing. This board is power, built first and
+        built to be reusable, so that when the MCU, drivetrain, and scanning head come
+        together the supply is a solved problem rather than an afterthought.
+      </p>
+    </div>
+  </div>
+
+  <div class="proj-pager">
+    <a class="btn" href="projects.html">← All projects</a>
+    <a class="btn" href="lidar.html">Next: LIDAR Mapper →</a>
+  </div>
+</main>
+
+<footer id="contact">
+  <div class="wrap">
+    <div class="foot-grid">
+      <div>
+        <h2>Contact</h2>
+      </div>
+      <ul class="contact-list">
+        <li><span class="label">email</span><a href="mailto:nabeelabuzaineh@gmail.com">nabeelabuzaineh@gmail.com</a></li>
+        <li><span class="label">linkedin</span><a href="https://www.linkedin.com/in/nabeel-abu-zaineh-313452333/">/in/Nabeel-Abu-Zaineh</a></li>
+        <li><span class="label">github</span><a href="https://github.com/NabeelA-Z">/NabeelA-Z</a></li>
+      </ul>
+    </div>
+    <p class="fineprint">© 2026 Nabeel Abu Zaineh</p>
+  </div>
+</footer>
+</body>
+</html>

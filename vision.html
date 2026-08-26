@@ -1,0 +1,440 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Assistive Vision Discord Bot — Nabeel Abu Zaineh</title>
+<meta name="description" content="A zero-cost Discord bot that identifies groceries for a client with Usher Syndrome, pairing YOLOv11 object detection with PaddleOCR text reading and delivering every answer both visually and audibly. Built for ENGINEER 1P13 Power in Community.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@700;800&family=IBM+Plex+Sans:wght@400;600&family=IBM+Plex+Mono:wght@400;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<header>
+  <div class="wrap nav">
+    <a class="brand" href="index.html">nabeel@ece:~$<span class="cursor">█</span></a>
+    <nav aria-label="Main">
+      <ul>
+        <li><a href="index.html">Home</a></li>
+        <li><a href="projects.html" aria-current="page">Projects</a></li>
+        <li><a href="index.html#contact">Contact</a></li>
+      </ul>
+    </nav>
+  </div>
+</header>
+
+<main class="wrap">
+  <div class="detail-hero">
+    <p class="crumb"><a href="projects.html">Projects</a> / PROJ-1P13-VISION</p>
+    <h1>Assistive Vision Discord Bot</h1>
+    <div class="detail-meta">
+      <span class="tag">Python</span><span class="tag">YOLOv11</span>
+      <span class="tag">PaddleOCR</span><span class="tag">discord.py</span>
+      <span class="tag">OpenCV</span><span class="tag">Accessibility</span>
+      <span class="tag">ENGINEER 1P13</span>
+    </div>
+  </div>
+
+  <div class="detail-body">
+
+    <h2><span class="num">1.0</span>The Client &amp; The Brief</h2>
+    <p>
+      <strong>ENGINEER 1P13: Power in Community</strong> pairs teams with a real client
+      instead of a hypothetical one. Ours was a 61-year-old woman with
+      <strong>Usher Syndrome</strong>, a condition that impairs both vision and hearing.
+      Critically, neither sense is entirely gone, and the condition is progressive, so what
+      she can see and hear today is not what she will be working with in a few years.
+    </p>
+    <p>
+      Her stated goal was independence: living without constant supervision from others.
+      The daily task she raised was <strong>grocery shopping</strong>, where the specific
+      failure is not navigation but identification. She could get to the store and could not
+      reliably tell what she was picking up or putting in the cart. Existing aids she had
+      access to did not address that.
+    </p>
+    <div class="callout">
+      <p class="callout-label">Why this brief is harder than it looks</p>
+      <p>
+        A dual sensory impairment removes the usual fallback. An assistive tool for a blind
+        user can lean entirely on audio. One for a deaf user can lean entirely on visuals.
+        Here neither channel is reliable on its own, so <strong>every response has to go out
+        both ways at once</strong> and be usable if only one of them lands. That single
+        constraint drove most of the design decisions on this page.
+      </p>
+    </div>
+
+    <h2><span class="num">2.0</span>The Solution</h2>
+    <p>
+      A software-only vision aid with two functions, split along how grocery items actually
+      present themselves:
+    </p>
+    <ul>
+      <li><strong>Object detection</strong> for unlabelled goods. Loose produce, fruit and
+        vegetables, anything with no printing on it to read.</li>
+      <li><strong>Text reading</strong> for labelled goods. Soup cans, boxed cereal, packaged
+        items where the answer is written on the front and just needs to be read out.</li>
+    </ul>
+    <p>
+      Those are two different computer vision problems, so they get two different models
+      rather than one compromise. The whole thing runs on the phone the client already owns,
+      with no additional hardware to carry, charge, or lose.
+    </p>
+    <table class="specs">
+      <caption>System definition</caption>
+      <tr><th>Course</th><td>ENGINEER 1P13, Power in Community</td></tr>
+      <tr><th>Object detection</th><td>Ultralytics YOLOv11 nano (<code>yolo11n.pt</code>)</td></tr>
+      <tr><th>Text recognition</th><td>PaddleOCR, English, angle classification enabled</td></tr>
+      <tr><th>Bot framework</th><td><code>discord.py</code>, Python 3.x</td></tr>
+      <tr><th>Client device</th><td>The client's own phone, Discord app</td></tr>
+      <tr><th>Host</th><td>A laptop already owned, running the bot</td></tr>
+      <tr><th>Total cost</th><td>Zero. Every component is open source or already owned</td></tr>
+      <tr><th>Repository</th><td><a href="https://github.com/oarshad53/Project-3">github.com/oarshad53/Project-3</a></td></tr>
+    </table>
+    <p>
+      Cost was not a footnote here. A software-only solution has no fabrication or materials
+      budget at all, and YOLOv11, PaddleOCR, <code>discord.py</code> and Discord itself are
+      all free. The client pays nothing to use it and nothing to keep using it.
+    </p>
+
+    <div class="fig-slot">
+      <strong>PHOTO SLOT 1</strong>
+      The bot in use on a phone: photo sent to the object recognition channel, annotated result returned
+    </div>
+
+    <h2><span class="num">3.0</span>Why Discord</h2>
+    <p>
+      Building a custom mobile app is the obvious answer and for this project, was the wrong one. It would have
+      meant writing an accessible camera flow, an accessible results screen, and a speech
+      layer from nothing, then asking the client to learn proprietary software no one had ever used.
+    </p>
+    <p>Discord was chosen on three arguments:</p>
+    <ol>
+      <li>
+        <strong>The accessibility work is already done and already tested.</strong> Discord
+        ships text-to-speech, zoom up to 300%, contrast and saturation controls, and colour
+        settings, all maintained by a company with real accessibility resources.
+      </li>
+      <li>
+        <strong>It survives a progressive condition.</strong> This is the strongest argument
+        and the one specific to this client. Her vision and hearing will continue to change.
+        Because Discord's accessibility settings are adjustable, the same deployment can be
+        re-tuned as her needs shift, rather than being frozen at whatever contrast and text
+        size were correct on the day it was handed over. A custom app would have needed us
+        to come back and rebuild it.
+      </li>
+      <li>
+        <strong>Help is available from people who are not us.</strong> Discord has an
+        enormous user base. If the client gets stuck, support exists in the world already.
+        With a custom app, it is a lot harder to find help.
+      </li>
+    </ol>
+    <p>
+      Discord is also light on storage, which matters on a phone that has to hold it
+      permanently.
+    </p>
+    <div class="callout">
+      <p class="callout-label">Design decision</p>
+      <p>
+        Choosing an existing platform over a custom build is a scope decision, not a
+        shortcut. It traded control over the interface for a solution the client could use
+        on day one, on hardware she already owned, that stays viable as her condition
+        changes. The team's effort went into the vision pipeline and the response design
+        instead of into rebuilding an interface that already existed and was already
+        accessible.
+      </p>
+    </div>
+
+    <h2><span class="num">4.0</span>System Architecture</h2>
+    <p>
+      The code splits into an engine and the interface that drives it, which kept the vision
+      work independent of the platform it was delivered on:
+    </p>
+    <ul>
+      <li><strong><code>main.py</code></strong> holds a <code>ComputerVision</code> class.
+        This is the whole engine: fetch an image from a URL, run detection, run OCR. It has
+        no idea Discord exists.</li>
+      <li><strong><code>bot.py</code></strong> holds <code>ListenerBot</code>, a subclass of
+        <code>discord.Client</code>. It handles the platform: listening for messages,
+        routing them by channel, and shaping the reply.</li>
+    </ul>
+    <p>
+      Images arrive as URLs, not files. When the client attaches a photo in Discord, the bot
+      receives a link, so <code>get_image_from_url</code> pulls the bytes with
+      <code>requests</code>, wraps them in a <code>numpy</code> byte array, and hands that to
+      <code>cv2.imdecode</code> to produce an OpenCV image. Nothing ever touches disk.
+    </p>
+
+    <h2><span class="num">5.0</span>The Vision Engine</h2>
+    <p>
+      <strong>Object detection</strong> uses <strong>YOLOv11 nano</strong> through the
+      Ultralytics API. <code>get_objects</code> predicts on the decoded image and returns two
+      things from one call: the list of detected class names, which becomes the spoken
+      sentence, and the annotated image with boxes drawn on it, which becomes the visual
+      reply. Returning both together means the model runs once per photo rather than twice.
+      The prediction is capped at a <strong>0.60 confidence floor</strong>, which is the
+      single most consequential number in the project. Lowering it would catch more objects
+      and start narrating things that are not there. For someone deciding what to put in a
+      cart based on what the bot says, a confident wrong answer is a worse failure than no
+      answer, so the threshold is deliberately set to stay quiet when unsure.
+    </p>
+    <p>
+      <strong>Text reading</strong> uses <strong>PaddleOCR</strong> with English and angle
+      classification enabled, the latter because a photo taken by someone who cannot see the
+      viewfinder is very often rotated. <code>get_text</code> flattens the nested OCR result
+      down to just the recognised strings, joins them into one line, and falls back to an
+      explicit <code>"No recognised text."</code> rather than an empty string. That sentinel
+      is what the bot checks before deciding whether to speak at all.
+    </p>
+    <p>
+      Both models were picked for being lightweight and fast rather than for being the most
+      accurate available. Someone standing in a grocery aisle holding up a can is waiting on
+      the answer, so latency is a usability property here, not a benchmark number. YOLO also
+      sits on top of OpenCV, and all three libraries are well documented, which for a
+      first-year team is a real selection criterion rather than a nice-to-have.
+    </p>
+    <div class="fig-slot">
+      <strong>PHOTO SLOT 2</strong>
+      Annotated YOLOv11 output with bounding boxes, class labels, and confidence values
+    </div>
+
+    <h2><span class="num">6.0</span>Interaction Design</h2>
+    <p>
+      This is the part of the project that is not about machine learning, and it is where
+      most of the real design work sits.
+    </p>
+
+    <h3 class="sub">Channels as modes</h3>
+    <p>
+      There are no commands to memorise. The bot decides what to run based on
+      <strong>which channel the photo was posted in</strong>: one for object recognition, one
+      for text recognition. The client picks a service by picking a room. For a user who
+      cannot comfortably scan a menu, that is a lower cognitive load than a command syntax,
+      and it is impossible to mistype. As section 8.0 covers, this layout was not the
+      original design. It came out of testing.
+    </p>
+
+    <h3 class="sub">Every answer, twice</h3>
+    <p>
+      Because neither sense can be relied on alone, each response goes out on both channels
+      at once. The visual reply is prefixed with <code>#</code>, Discord markdown for a
+      level-one heading, so the text renders at the largest size the app will produce. The
+      same content is posted, unformatted, into a dedicated text-to-speech channel, and read
+      aloud into a voice channel the client joins before using the service. She reads it,
+      hears it, or both.
+    </p>
+
+    <h3 class="sub">Making the speech sound like a sentence</h3>
+    <p>
+      A <code>starts_vowel</code> helper checks the first letter of a detected label and picks
+      "a" or "an" accordingly, so the bot says "there is an <em>apple</em> in front of you"
+      instead of "there is a apple". It is four lines of code, and when the output is audio
+      it is the difference between something that sounds like a device and something that
+      sounds like a person.
+    </p>
+
+    <h3 class="sub">Filtering the answer, not just the detections</h3>
+    <p>
+      YOLO detects people, and in a grocery store it detects the client and every shopper
+      near her in almost every frame. If more than one object is found and
+      <code>"person"</code> is among them, the bot removes it and re-checks whether a single
+      object is left. Being told "there is a person" on every photo is noise that buries the
+      part of the answer she actually asked for. The phrasing then adapts to what survives:
+      one object gets a full sentence, several get a comma-separated list, and none gets an
+      explicit "no objects detected" rather than silence.
+    </p>
+
+    <h3 class="sub">Always saying what state it is in</h3>
+    <p>
+      The bot adds a 👍 reaction to the incoming photo, then announces "waiting for image"
+      once it has replied. Detection is not instant, and without a signal the client cannot
+      distinguish "thinking" from "broken". The idle announcement means the system is never
+      silently doing nothing.
+    </p>
+
+    <div class="fig-slot">
+      <strong>PHOTO SLOT 3</strong>
+      Channel structure: object recognition, text recognition, the TTS text channel, and the TTS output voice channel
+    </div>
+
+    <h2><span class="num">7.0</span>Testing &amp; Results</h2>
+    <p>
+      Both functions were measured quantitatively, and the interface was tested on people
+      through surveys.
+    </p>
+    <table class="specs">
+      <caption>Quantitative results</caption>
+      <tr><th>Metric</th><th>Result</th></tr>
+      <tr><td>Average image processing time</td><td>129 ms</td></tr>
+      <tr><td>Object detection, correct trials</td><td>70%</td></tr>
+      <tr><td>Object detection, average confidence (all trials)</td><td>54.5%</td></tr>
+      <tr><td>Text recognition accuracy</td><td>89%</td></tr>
+    </table>
+    <p>
+      That confidence figure needs its methodology stated, because it sits below the
+      <strong>0.60 floor the bot enforces</strong> and would otherwise look impossible.
+      Confidence was recorded for <em>every</em> trial, including the ones where the model
+      failed to clear the threshold and therefore said nothing to the user. So 54.5% is the
+      model's raw certainty across everything it was shown, not the certainty of the answers
+      that actually reached the client, which by definition all sat above 0.60.
+    </p>
+    <p>
+      Measuring it that way is the more honest choice. Reporting only the detections that
+      passed the filter would have flattered the system by hiding every photo it quietly
+      declined to answer, and for an assistive tool those silences are part of the user
+      experience, not an absence of data.
+    </p>
+    <p>
+      The 129 ms processing time confirms the model choice: the response is effectively
+      immediate from the user's side, and the wait she actually experiences is network and
+      Discord, not inference.
+    </p>
+    <p>
+      The more interesting result is the split between the two functions.
+      <strong>Text reading landed at 89% while object detection managed 70%</strong>, and
+      that gap maps cleanly onto the client's own use case. Reading a soup can is a
+      constrained problem with a right answer printed on it. Identifying loose produce is
+      open-ended, and a nano model trained on general object classes is being asked to
+      distinguish things it was never specifically trained to separate. The function serving
+      labelled goods is the one that works well.
+    </p>
+    <table class="specs">
+      <caption>Qualitative survey results (out of 5)</caption>
+      <tr><th>Criterion</th><th>Rating</th><th>Feedback</th></tr>
+      <tr><td>Ease of use</td><td>3.0</td><td>Most participants struggled to input an image the first time, and expected it to get easier once learned</td></tr>
+      <tr><td>Clarity of text-to-speech</td><td>4.2</td><td>Majority could hear and repeat back what was said, a few reported difficulty</td></tr>
+    </table>
+    <p>
+      A 3.0 on ease of use is the honest number and the useful one. The audio output was
+      landing, and the barrier was the step before it: getting a photo into the right place.
+      That result is what drove the changes in the next section.
+    </p>
+
+    <h2><span class="num">8.0</span>What Changed After Testing</h2>
+    <p>
+      Two iterations came directly out of user feedback, and both are cases where the
+      original design was defensible on paper and wrong in someone's hands.
+    </p>
+
+    <h3 class="sub">One channel became two</h3>
+    <p>
+      The first build had a single channel, <code>recognition-and-reader</code>, handling
+      both functions. It was fewer moving parts and it confused people, because the same
+      room did two different things depending on what you sent it. Testers could not form a
+      clear model of what the bot would do with their photo.
+    </p>
+    <p>
+      Splitting it into <code>object-recognition</code> and <code>text-recognition</code>
+      made the choice explicit and physical. You pick the service by walking into the room
+      for it. The channel-as-mode design described in section 6.0 is the outcome of this
+      change, not the starting point.
+    </p>
+
+    <h3 class="sub">The formatting character broke the speech</h3>
+    <p>
+      The <code>#</code> prefix that makes text render huge is the correct call visually. It
+      turned out to be actively harmful audibly: it confused Discord's native text-to-speech
+      output. The one character doing the visual accessibility work was damaging the audio
+      accessibility.
+    </p>
+    <p>
+      Rather than dropping the large text, the fix was to separate the two paths entirely.
+      Spoken output moved to a <strong>dedicated voice channel</strong>, fed by a plain
+      unformatted copy of every message posted to a separate TTS text channel. The visual
+      reply keeps its <code>#</code> and stays oversized; the audio path never sees the
+      formatting character at all. The dual output survived, and each channel got to be
+      optimised for its own medium.
+    </p>
+    <div class="callout">
+      <p class="callout-label">The lesson</p>
+      <p>
+        Both iterations came from watching people use the thing, not from reading the code.
+        A markdown character that is correct in one output medium and broken in another is
+        not something a test suite catches, and neither is a channel layout that makes
+        perfect sense to the people who built it.
+      </p>
+    </div>
+
+    <h2><span class="num">9.0</span>Tradeoffs &amp; Known Limitations</h2>
+    <table class="specs">
+      <caption>Where the build stands</caption>
+      <tr><th>Item</th><th>State</th></tr>
+      <tr><td>Bot token handling</td><td>Loaded from a <code>.env</code> file via <code>python-dotenv</code>, kept out of source</td></tr>
+      <tr><td>Channel IDs</td><td>Hard-coded, so redeploying to another server needs manual edits</td></tr>
+      <tr><td>Hosting</td><td>Runs on a laptop, so the service is only up while that machine is on</td></tr>
+      <tr><td>Model weights</td><td>YOLOv11 nano committed to the repo, so the bot runs without a download step</td></tr>
+      <tr><td>OCR call</td><td>Runs twice per message in the text path, once to test the result and once to send it</td></tr>
+      <tr><td>Object detection accuracy</td><td>70%, the weaker of the two functions and the obvious target for improvement</td></tr>
+      <tr><td>Alternate front end</td><td>A Streamlit app was explored early, never used, and left in the repo</td></tr>
+    </table>
+    <p>
+      The hosting limitation is the one that matters most for a client who wants independence.
+      A bot tied to a laptop being switched on is not the same as a service that is simply
+      there, and moving it onto something always-on is the difference between a working
+      prototype and something she could rely on.
+    </p>
+    <div class="callout">
+      <p class="callout-label">What I would change</p>
+      <p>
+        Host the bot somewhere always-on so it does not depend on a laptop staying awake.
+        Move the channel IDs and the token together into configuration so it can be
+        redeployed without touching source. Cache the OCR result instead of running
+        PaddleOCR twice on the same image. And given that the 70% figure is the weakest
+        number in the project, fine-tune detection on actual grocery items rather than
+        relying on general-purpose classes.
+      </p>
+    </div>
+
+    <h2><span class="num">10.0</span>What This Project Taught Me</h2>
+    <p>
+      The technically interesting part is a detection model and an OCR engine wired to a chat
+      platform. The genuinely hard part was everything downstream of the prediction: what to
+      say, what to leave out, how to phrase it so it sounds like language, and how to deliver
+      it to someone who cannot fully rely on either seeing or hearing it. None of that is
+      visible in an accuracy number.
+    </p>
+    <p>
+      It also taught me that designing for a progressive condition means designing for a
+      moving target. The strongest decision in the project was choosing a platform whose
+      accessibility settings can be re-tuned as the client's vision and hearing change, so
+      the solution does not expire the moment her needs shift.
+    </p>
+    <p>
+      The pattern carried forward: pick the platform that removes the work you do not need to
+      be doing, then spend what you saved on the part only you can build. The same instinct
+      shows up in the <a href="lidar.html">3D spatial mapper</a>, where the VL53L1X handles
+      ranging so the effort goes into the scan and reconstruction pipeline instead.
+    </p>
+    <p>
+      Built as a four-person team for ENGINEER 1P13. The repository is hosted by a teammate
+      at <a href="https://github.com/oarshad53/Project-3">oarshad53/Project-3</a>.
+    </p>
+    <p>
+      <a class="btn" href="https://github.com/oarshad53/Project-3">View the repository →</a>
+    </p>
+  </div>
+
+  <div class="proj-pager">
+    <a class="btn" href="psu.html">← Prev: DC Power Supply</a>
+    <a class="btn" href="hub.html">Next: Learning Hub →</a>
+  </div>
+</main>
+
+<footer id="contact">
+  <div class="wrap">
+    <div class="foot-grid">
+      <div>
+        <h2>Contact</h2>
+      </div>
+      <ul class="contact-list">
+        <li><span class="label">email</span><a href="mailto:nabeelabuzaineh@gmail.com">nabeelabuzaineh@gmail.com</a></li>
+        <li><span class="label">linkedin</span><a href="https://www.linkedin.com/in/nabeel-abu-zaineh-313452333/">/in/Nabeel-Abu-Zaineh</a></li>
+        <li><span class="label">github</span><a href="https://github.com/NabeelA-Z">/NabeelA-Z</a></li>
+      </ul>
+    </div>
+    <p class="fineprint">© 2026 Nabeel Abu Zaineh</p>
+  </div>
+</footer>
+</body>
+</html>

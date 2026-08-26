@@ -407,3 +407,49 @@ figure.site-fig figcaption {
   display: inline-block; margin-top: 16px;
   font-family: var(--mono); font-size: 0.85rem;
 }
+
+/* ---------- Work-in-progress banner (project detail pages) ---------- */
+.wip-banner {
+  margin-top: 20px;
+  max-width: 780px;
+  border: 1.5px solid var(--copper);
+  border-left: 5px solid var(--copper);
+  background: var(--card);
+  padding: 12px 16px;
+  font-family: var(--mono);
+  font-size: 0.82rem;
+  line-height: 1.6;
+  color: var(--muted);
+}
+.wip-banner strong {
+  color: var(--copper);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+/* Inline part numbers / footprint names */
+.detail-body code {
+  font-family: var(--mono);
+  font-size: 0.82em;
+  background: var(--paper);
+  border: 1px solid var(--grid);
+  padding: 1px 5px;
+  word-break: break-all;
+}
+
+/* WIP variant of the project-card status chip */
+.proj-head .status.wip {
+  border-color: var(--copper);
+  color: var(--copper);
+}
+
+/* Sub-headings inside a project detail section */
+.detail-body h3.sub {
+  font-family: var(--display);
+  font-weight: 700;
+  font-size: 1.02rem;
+  letter-spacing: -0.01em;
+  margin: 26px 0 10px;
+  padding-left: 12px;
+  border-left: 3px solid var(--blue);
+}
