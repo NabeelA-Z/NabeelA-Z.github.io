@@ -35,8 +35,8 @@
       <span class="tag">LTspice</span><span class="tag">2-layer PCB</span>
     </div>
     <p class="wip-banner"><strong>Work in progress.</strong> Schematic capture, connector
-      selection, and layout are done. Fabrication, assembly, and bring-up are still ahead.
-      This page tracks the design as it goes.</p>
+      selection, and layout are done. Simulation is next, with fabrication, assembly, and
+      bring-up ahead of that. This page tracks the design as it goes.</p>
   </div>
 
   <div class="detail-body">
@@ -76,7 +76,7 @@
       <tr><th>Tool</th><td>KiCad (schematic, footprints, layout)</td></tr>
       <tr><th>Input</th><td>USB-C receptacle, 5 V, power only</td></tr>
       <tr><th>Storage</th><td>Single Li-ion cell on a dedicated connector</td></tr>
-      <tr><th>Output</th><td>Regulated boost rail on a Mini-USB connector</td></tr>
+      <tr><th>Output</th><td>3.33 V minimum rail on a Mini-USB connector, riding higher with a full cell</td></tr>
       <tr><th>Stackup</th><td>2 layer (F.Cu / B.Cu)</td></tr>
       <tr><th>Target</th><td>Power module for a mini scanning rover, a mobile version of the <a href="lidar.html">2DX3 spatial mapper</a></td></tr>
     </table>
@@ -92,24 +92,31 @@
       <li><strong>Li-ion charge IC.</strong> Takes VBUS and manages the charge profile into
         the cell.</li>
       <li><strong>Boost converter.</strong> Takes the cell voltage, which sags across the
-        discharge curve, and holds a stable higher output rail.</li>
+        discharge curve, and holds it at or above the 3.33 V the electronics need.</li>
       <li><strong>Output connector.</strong> Carries the regulated rail off-board to the
         rover electronics.</li>
     </ol>
 
-    <div class="fig-slot">
-      <strong>PHOTO SLOT 1</strong>
-      Full schematic in KiCad (input stage through boost output)
-    </div>
+    <figure class="site-fig">
+      <img src="img/charger-schematic.png" alt="KiCad schematic of the USB-C Li-ion charger and boost converter, showing the USB-C receptacle with CC pull-downs, the MCP73831 charge controller, the battery connector, the MT3608 boost stage, and the Mini-USB output">
+      <figcaption>Full schematic in KiCad. Left to right: J2 USB-C input with R6/R7 CC pull-downs, U1 MCP73831-2-OT charge controller with R1 setting charge current and D1 on STAT, J1 battery connector, then the MT3608 boost stage (L1, D2, R4/R5 feedback divider) out to J3 Mini-USB.</figcaption>
+    </figure>
 
     <h2><span class="num">3.0</span>USB-C Input Stage</h2>
     <p>
-      The input connector is a <strong>GCT USB4105 series</strong> USB-C receptacle, using
-      the KiCad footprint
+      The input is <strong>J2</strong>, drawn with the
+      <code>USB_C_Receptacle_USB2.0_14P</code> symbol, which exposes the USB 2.0 subset of a
+      USB-C connector rather than all 24 pins. The physical part is a
+      <strong>GCT USB4105 series</strong> receptacle, footprint
       <code>USB_C_Receptacle_GCT_USB4105-xx-A_16P_TopMnt_Horizontal</code>.
-      Selecting it meant cross-referencing the manufacturer datasheet against the library
-      footprint rather than trusting the name alone, since a 16-pin top-mount horizontal
-      part has to match both the pin map and the mechanical footprint at the board edge.
+    </p>
+    <p>
+      Symbol and footprint therefore do not have matching pin counts, which is normal for
+      USB-C and exactly why this needed checking rather than trusting the library. The
+      symbol describes the electrical subset being used, the footprint describes the pads
+      the physical part actually lands on, and confirming that the pin map lines up between
+      the two meant reading the manufacturer datasheet rather than assuming a sensible
+      default.
     </p>
     <p>
       The port is wired <strong>power only</strong>. VBUS and GND go to the charge circuit.
@@ -122,7 +129,10 @@
     <p>
       D+, D&#8722;, and the remaining unused pins are left unconnected, with explicit
       no-connect flags placed in the schematic so ERC treats them as a deliberate decision
-      instead of an oversight.
+      instead of an oversight. <code>PWR_FLAG</code> symbols are attached to the input and
+      ground nets for the same reason: KiCad otherwise reports a power net with no driver,
+      since the actual source is a cable rather than anything on the sheet. Both are
+      housekeeping that exists so a clean ERC means something.
     </p>
     <div class="callout">
       <p class="callout-label">Design note</p>
@@ -134,39 +144,106 @@
       </p>
     </div>
 
-    <div class="fig-slot">
-      <strong>PHOTO SLOT 2</strong>
-      USB-C input stage detail: receptacle, CC pull-downs, no-connect flags
-    </div>
-
     <h2><span class="num">4.0</span>Charge and Boost Path</h2>
+    <h3 class="sub">Charge stage</h3>
     <p>
-      The charge IC stage sits directly off VBUS and manages charging the Li-ion cell, which
-      connects through its own battery connector so the pack can be swapped or removed from
-      the board. The boost converter then takes that cell voltage and steps it up to the
-      output rail.
+      Charging is handled by a <strong>MCP73831-2-OT</strong>, a single-cell Li-ion charge
+      controller in SOT-23-5 that sits directly off VBUS. The <code>-2</code> suffix is the
+      part variant that regulates to a <strong>4.20 V</strong> float voltage, which is the
+      standard full-charge point for a single Li-ion cell, so the choice of suffix is the
+      choice of battery chemistry.
     </p>
     <p>
-      The boost stage is the part that has to be engineered rather than simply wired. A
-      single Li-ion cell falls from roughly 4.2 V down toward 3.0 V over a discharge, and
-      the rover's electronics need a fixed rail regardless of where the cell sits on that
-      curve. That means the converter's inductor, switch node, and feedback network have to
-      be chosen for the full input range, not just a nominal operating point, which is
-      exactly what the simulation work in section 7.0 is for.
+      Charge current is set by a single resistor. The MCP73831 holds its PROG pin at a fixed
+      reference and mirrors that current internally, giving
+      I<sub>REG</sub> = 1000&nbsp;V / R<sub>PROG</sub>. With <strong>R1 at 2 k&#937;</strong>
+      that works out to <strong>500 mA</strong>, which is the part's maximum. One resistor
+      value is the entire charge-rate design, and it is the value to revisit if the cell
+      eventually chosen wants a gentler rate.
     </p>
+    <p>
+      The STAT pin drives <strong>D1</strong> through a 470 &#937; resistor for a charge
+      indicator LED, so the board reports its own state without needing anything attached to
+      read it. <strong>C1</strong> and <strong>C2</strong> (4.7 &#181;F each) sit on the
+      input and battery nodes, and the cell itself connects through <strong>J1</strong>, a
+      two-pin header, so the pack can be swapped or removed.
+    </p>
+
+    <h3 class="sub">Boost stage</h3>
+    <p>
+      The boost is built around an <strong>MT3608</strong>, an asynchronous boost converter,
+      meaning it integrates the switch but needs an external rectifier. <strong>L1</strong>
+      (22 &#181;H) runs from the battery rail into the switch node, <strong>D2</strong> is
+      the Schottky that rectifies it out to VOUT, and <strong>C3</strong> (4.7 &#181;F)
+      holds up the output. <strong>R3</strong> pulls EN up to the battery rail, so the
+      converter runs whenever a cell is connected rather than needing an enable signal from
+      an MCU that may not have booted yet.
+    </p>
+    <p>
+      Output voltage is set by the <strong>R4 / R5 divider</strong> feeding FB. The MT3608
+      regulates FB to an internal 0.6 V reference, so the divider ratio alone determines the
+      rail:
+    </p>
+    <p style="font-family: var(--mono); font-size: 0.9rem; padding-left: 12px;">
+      V<sub>OUT</sub> = 0.6&nbsp;V &#215; (1 + R4/R5) = 0.6&nbsp;V &#215; (1 + 10&nbsp;k/2.2&nbsp;k) =
+      <strong>3.33 V</strong>
+    </p>
+    <p>
+      That target is deliberate. The scanning hardware this board exists to feed runs on 3.3 V
+      logic, so the rail is sized to what the load actually wants rather than to a generic
+      5 V bus, even though the output physically leaves on a USB connector. Two resistors are
+      the only thing standing between the cell and everything downstream, which makes them
+      the highest-consequence values on the board.
+    </p>
+    <p>
+      Worth being precise about what that number is, because it is a <strong>floor rather
+      than a fixed value</strong>. A single Li-ion cell falls from roughly 4.2 V at full
+      charge down toward 3.0 V flat, so it starts the discharge above the target. A boost
+      converter has no mechanism to pull its output below its input, so in that region the
+      MT3608 simply stops boosting and the output sits at about the cell voltage less the
+      forward drop across D2, sagging along with the cell. Once the cell reaches 3.33 V the
+      converter takes over and holds the rail there for the remainder of the discharge.
+    </p>
+    <p>
+      That is acceptable here because of what is downstream. The MCU accepts a range of
+      supply levels rather than a single one, and <strong>3.33 V is the bottom of that
+      range</strong>, the minimum needed for a valid logic high. So the design brief for this
+      stage was never "hold exactly 3.33 V", it was "never go below 3.33 V while the cell has
+      charge left". Sizing the divider to the floor and letting the output ride above it
+      early in the discharge satisfies that with one converter instead of the buck-boost the
+      stricter reading would have demanded.
+    </p>
+    <table class="specs">
+      <caption>Key components</caption>
+      <tr><th>Ref</th><th>Part / value</th><th>Function</th></tr>
+      <tr><td>J2</td><td>USB-C receptacle, USB 2.0 14-pin symbol on a GCT USB4105 footprint</td><td>5 V charging input</td></tr>
+      <tr><td>R6, R7</td><td>5.1 k&#937;</td><td>CC1 / CC2 pull-downs, sink identification</td></tr>
+      <tr><td>U1</td><td>MCP73831-2-OT</td><td>Li-ion charge controller, 4.20 V float</td></tr>
+      <tr><td>R1</td><td>2 k&#937;</td><td>PROG resistor, sets 500 mA charge current</td></tr>
+      <tr><td>D1, R2</td><td>LED, 470 &#937;</td><td>Charge status indicator on STAT</td></tr>
+      <tr><td>J1</td><td>2-pin header</td><td>Li-ion cell connection</td></tr>
+      <tr><td>U2</td><td>MT3608</td><td>Asynchronous boost converter</td></tr>
+      <tr><td>L1</td><td>22 &#181;H</td><td>Boost inductor</td></tr>
+      <tr><td>D2</td><td>SS34 Schottky</td><td>Boost rectifier</td></tr>
+      <tr><td>R3</td><td>10 k&#937;</td><td>EN pull-up, converter always on with a cell fitted</td></tr>
+      <tr><td>R4, R5</td><td>10 k&#937; / 2.2 k&#937;</td><td>Feedback divider, sets the 3.33 V floor</td></tr>
+      <tr><td>C1, C2, C3</td><td>4.7 &#181;F</td><td>Input, battery, and output decoupling</td></tr>
+      <tr><td>J3</td><td>USB Mini-B receptacle</td><td>Regulated output to the MCU board</td></tr>
+    </table>
 
     <h2><span class="num">5.0</span>Output Connector</h2>
     <p>
-      The regulated output leaves the board on a second connector, planned as
-      <strong>Mini-USB</strong> to match the Mini-USB power input on the target MCU board.
+      The regulated output leaves the board on <strong>J3</strong>, a
+      <strong>USB Mini-B receptacle</strong> chosen to match the Mini-USB power input on the
+      target MCU board.
       Choosing the connector to fit the downstream hardware, rather than dropping in a
       generic header, keeps the rover build cable-simple later on.
     </p>
     <p>
-      Like the input, it is wired power only: VBUS and GND carry the boost output, and
-      D+, D&#8722;, and ID are left no-connected. The footprint under consideration is
-      <code>USB_Mini-B_Lumberg_2486_01</code>, or an equivalent Mini-USB-B receptacle from
-      the same KiCad library, pending a final mechanical check.
+      Like the input, it is wired power only: VBUS and GND carry the boost output, while
+      D+, D&#8722;, and ID are no-connected in the schematic. The footprint is
+      <code>USB_Mini-B_Lumberg_2486_01</code>, or an equivalent Mini-B receptacle from the
+      same KiCad library.
     </p>
 
     <h2><span class="num">6.0</span>PCB Layout</h2>
@@ -219,32 +296,56 @@
       fabrication files go out.
     </p>
 
-    <div class="fig-slot">
-      <strong>PHOTO SLOT 3</strong>
-      PCB layout in KiCad: placement, copper routing, board outline
-    </div>
-    <div class="fig-slot">
-      <strong>PHOTO SLOT 4</strong>
-      3D render of the assembled board
-    </div>
+    <figure class="site-fig">
+      <img src="img/charger-pcb.png" alt="KiCad PCB layout of the charger board showing the USB-C receptacle on the left board edge, the charge controller beside it, the boost converter section on the right, and the Mini-USB output at top right, routed in red front copper and blue back copper">
+      <figcaption>PCB layout in KiCad. J2 sits on the board edge at left with R6 and R7 immediately beside it, U1 clusters against the VBUS entry, and the boost section (U2, L1, D2, C2, C3) occupies the right-hand side, feeding J3 at top right. Red is front copper, blue is back copper, and the white rectangle is the Edge.Cuts outline.</figcaption>
+    </figure>
 
-    <h2><span class="num">7.0</span>Simulation Approach</h2>
+    <h2><span class="num">7.0</span>Simulation Plan</h2>
     <p>
-      Boost converter behaviour is being validated in <strong>LTspice</strong> before
-      component values are frozen: switching waveforms, inductor current, output ripple, and
-      stability. I started in KiCad's built-in ngspice simulator and moved to LTspice after
-      hitting simulator setup problems that were costing more time than the simulation
-      itself.
+      Boost converter behaviour needs validating before the design is committed to
+      fabrication: switching waveforms, inductor current, output ripple, and stability. That
+      work has not started yet, and it is the main thing standing between the current
+      schematic and a fab order.
     </p>
     <p>
-      One deliberate simplification in the model: the USB-C receptacle is replaced with a
-      plain 5 V DC source. A connector is a mechanical part with no meaningful SPICE
-      behaviour to solve for, so modelling it adds nothing. What matters electrically at
-      that point in the circuit is that 5 V is present on VBUS, and that is exactly what the
-      source provides.
+      The first attempt was in <strong>KiCad's built-in ngspice</strong> simulator, on the
+      reasoning that simulating inside the tool the schematic already lives in avoids
+      redrawing anything. That ran into simulator setup problems that were consuming more
+      time than the simulation itself would have, so the plan moved to
+      <strong>LTspice</strong>, which means redrawing the circuit but on a toolchain that
+      behaves predictably for switching supplies.
     </p>
+    <p>
+      One simplification carries over from that first attempt: the USB-C receptacle gets
+      replaced with a plain 5 V DC source. A connector is a mechanical part with no
+      meaningful SPICE behaviour to solve for, so modelling it adds nothing. What matters
+      electrically at that point in the circuit is that 5 V is present on VBUS, and that is
+      exactly what the source provides. The real connector stays in the KiCad schematic,
+      which is the one that gets fabricated.
+    </p>
+    <p>
+      The specific questions the simulation has to answer, in order of how much damage
+      getting them wrong would do:
+    </p>
+    <ol>
+      <li><strong>How clean is the crossover?</strong> The cell passes through the 3.33 V
+        target on its way down, and at that point the converter changes behaviour: it goes
+        from passing the cell through to actively boosting. The rail either side of that
+        handover is understood, so what the simulation is really checking is that the
+        transition itself is well behaved rather than oscillatory.</li>
+      <li><strong>Does the divider produce the rail the arithmetic predicts?</strong> R4 and
+        R5 set the output through a 0.6 V reference, and confirming the real part agrees with
+        the calculation is cheap in simulation and expensive after fabrication.</li>
+      <li><strong>Is the 22 &#181;H inductor the right value?</strong> Inductor choice sets
+        ripple current and how much output current the stage can actually deliver, so this
+        is where the simulation says whether the part on the schematic can feed the real
+        load.</li>
+      <li><strong>What does the switch node and output ripple actually look like?</strong>
+        This is the check that the layout decisions in section 6.0 were worth making.</li>
+    </ol>
     <div class="fig-slot">
-      <strong>PHOTO SLOT 5</strong>
+      <strong>PHOTO SLOT 2</strong>
       LTspice boost converter model and simulated waveforms (switch node, inductor current, output ripple)
     </div>
 
@@ -269,7 +370,7 @@
       <tr><th>Components</th><td>Connector selection and datasheet cross-referencing (GCT USB4105 series)</td></tr>
       <tr><th>Standards</th><td>USB-C sink-side CC pull-down requirements</td></tr>
       <tr><th>Layout</th><td>Functional placement, power vs. signal routing priority, 2-layer routing with vias, SMD pad layer constraints, Edge.Cuts outline</td></tr>
-      <tr><th>Validation</th><td>LTspice simulation of switching power electronics</td></tr>
+      <tr><th>Validation</th><td>Planned: LTspice simulation of the switching stage before fabrication</td></tr>
     </table>
 
     <h2><span class="num">9.0</span>Status &amp; Next Steps</h2>
@@ -281,10 +382,10 @@
       <tr><td>USB-C connector selection and CC wiring</td><td>Done</td></tr>
       <tr><td>Charge IC and boost stage capture</td><td>Done</td></tr>
       <tr><td>Component placement and routing</td><td>Done</td></tr>
-      <tr><td>Mini-USB output footprint and wiring</td><td>In progress</td></tr>
+      <tr><td>Mini-USB output connector and wiring</td><td>Done</td></tr>
       <tr><td>Board outline (Edge.Cuts)</td><td>Done</td></tr>
       <tr><td>Mounting holes</td><td>Under review, decide before fabrication</td></tr>
-      <tr><td>LTspice boost validation</td><td>In progress</td></tr>
+      <tr><td>LTspice boost validation</td><td>Not started</td></tr>
       <tr><td>Final DRC / ERC</td><td>Pending</td></tr>
       <tr><td>Fabrication and assembly</td><td>Pending</td></tr>
       <tr><td>Bring-up and load testing</td><td>Pending</td></tr>
@@ -298,11 +399,11 @@
       cutting the cord.
     </p>
     <div class="fig-slot">
-      <strong>PHOTO SLOT 6</strong>
+      <strong>PHOTO SLOT 3</strong>
       Fabricated and assembled board (to be added after bring-up)
     </div>
     <div class="fig-slot">
-      <strong>PHOTO SLOT 7</strong>
+      <strong>PHOTO SLOT 4</strong>
       Bench test setup and measured results (to be added after bring-up)
     </div>
 
