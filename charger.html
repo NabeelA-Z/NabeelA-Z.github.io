@@ -43,11 +43,26 @@
 
     <h2><span class="num">1.0</span>Why This Board Exists</h2>
     <p>
-      This is the first hardware module of a larger build: a mini scanning rover, a small
-      mobile robot with LiDAR / time-of-flight scanning capability. Rather than start with
-      the MCU and drivetrain and bolt power on at the end, I designed the power path first
-      as a standalone, reusable module. Charge a Li-ion cell from USB-C, then step that cell
-      voltage up to a stable rail that can run the rover's electronics.
+      This is the first hardware module of a larger build: a mini scanning rover. The rover
+      is not a new idea from scratch, it is my
+      <a href="lidar.html">3D indoor spatial mapper</a> made mobile. That project already
+      works: a VL53L1X time-of-flight sensor on a 28BYJ-48 stepper, rotated through 360° and
+      sampled at fixed angular increments, with an MSP432E401Y driving the motor, reading the
+      sensor over I&#178;C, and streaming results out over UART into a MATLAB point cloud.
+      The scanning head is solved.
+    </p>
+    <p>
+      What that mapper cannot do is leave the bench. It is tethered, taking data out over a
+      UART cable to a PC and power from whatever is plugged in nearby, and the displacement
+      between scan planes has to be introduced from outside the system. Putting the same
+      scanner on a driving platform is what turns it from a scanner into a rover, and it lets
+      the vehicle's own motion supply the displacement between scan planes instead.
+    </p>
+    <p>
+      Every one of those changes starts with the same problem: <strong>the thing has to carry
+      its own power</strong>. That is why this board came first rather than the chassis or
+      the drivetrain. Charge a Li-ion cell from USB-C, then step that cell voltage up to a
+      stable rail that can run the scanning hardware that already exists.
     </p>
     <p>
       Designing it as a separate board has a second payoff. It is a complete from-scratch
@@ -63,7 +78,7 @@
       <tr><th>Storage</th><td>Single Li-ion cell on a dedicated connector</td></tr>
       <tr><th>Output</th><td>Regulated boost rail on a Mini-USB connector</td></tr>
       <tr><th>Stackup</th><td>2 layer (F.Cu / B.Cu)</td></tr>
-      <tr><th>Target</th><td>Power module for a mini scanning rover</td></tr>
+      <tr><th>Target</th><td>Power module for a mini scanning rover, a mobile version of the <a href="lidar.html">2DX3 spatial mapper</a></td></tr>
     </table>
 
     <h2><span class="num">2.0</span>Signal Chain</h2>
@@ -179,6 +194,15 @@
       problem.
     </p>
     <p>
+      That separation is not a rule I copied from a layout guide. On the
+      <a href="lidar.html">spatial mapper</a>, driving the stepper motor corrupted I&#178;C
+      transactions with the sensor, and tracking that down cost real debugging time. It is
+      the same failure mode in a different form: a switching load injecting noise into a line
+      that carries small, meaningful signals. Having paid for that lesson once, keeping the
+      boost feedback away from the switch node was the first thing decided about this
+      routing, not the last.
+    </p>
+    <p>
       The board is two layer, with vias used to hop from front copper (F.Cu) to back copper
       (B.Cu) wherever a route could not stay on one side. Working through this surfaced a
       constraint worth writing down: <strong>an SMD pad exists on only one copper
@@ -226,11 +250,13 @@
 
     <h2><span class="num">8.0</span>Background Applied</h2>
     <p>
-      This board builds on earlier embedded and circuits work rather than starting cold. The
-      <a href="lidar.html">3D spatial mapper</a> put me on the <strong>VL53L1X
-      time-of-flight sensor</strong> over I&#178;C and UART on an
-      <strong>MSP432E401Y</strong>, which is directly the sensing front end the rover will
-      reuse, and TM4C1294 firmware work covers the MCU side. Transistor-level
+      This board builds on earlier embedded and circuits work rather than starting cold, and
+      most directly on one project. The <a href="lidar.html">3D spatial mapper</a> is not
+      just related background here, it is the system this board exists to power. Its VL53L1X
+      sensor, 28BYJ-48 stepper, and <strong>MSP432E401Y</strong> firmware carry over to the
+      rover essentially intact, so the load this converter has to supply is hardware I have
+      already built and measured rather than a guess. TM4C1294 firmware work covers the wider
+      MCU side. Transistor-level
       <a href="switches.html">MOSFET</a> and <a href="amplifier.html">BJT</a> analysis is
       what makes the boost converter's switch node something to reason about instead of a
       block to copy. The <a href="psu.html">DC power supply</a> project is the same
@@ -267,7 +293,9 @@
       Bring-up will check the two things the design is actually claiming: that charge
       behaviour into the cell is correct, and that the boost output holds its voltage under
       load across the cell's discharge range. After that the module gets integrated with the
-      rover's MCU and the VL53L1X sensor, which is the point of the whole exercise.
+      <a href="lidar.html">spatial mapper's</a> MSP432E401Y and VL53L1X scanning head, which
+      is the point of the whole exercise: taking a scanner that works but cannot move, and
+      cutting the cord.
     </p>
     <div class="fig-slot">
       <strong>PHOTO SLOT 6</strong>
@@ -281,9 +309,11 @@
     <div class="callout">
       <p class="callout-label">Where this is going</p>
       <p>
-        The rover needs power, motion, and sensing. This board is power, built first and
-        built to be reusable, so that when the MCU, drivetrain, and scanning head come
-        together the supply is a solved problem rather than an afterthought.
+        The rover needs power, motion, and sensing. Sensing is already done and documented
+        over on the <a href="lidar.html">spatial mapper</a>. This board is power, built first
+        and built to be reusable. That leaves motion as the only genuinely new subsystem
+        left, and it means the rover is less a new project than the third side of one I
+        started in 2DX3.
       </p>
     </div>
   </div>
