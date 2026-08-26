@@ -374,7 +374,8 @@ footer .fineprint {
 .fig-slot strong { color: var(--copper); display: block; margin-bottom: 4px; }
 
 figure.site-fig { margin: 20px 0 24px; border: 1.5px solid var(--ink); background: var(--card); }
-figure.site-fig img { display: block; width: 100%; height: auto; }
+figure.site-fig img,
+figure.site-fig video { display: block; width: 100%; height: auto; background: #000; }
 figure.site-fig figcaption {
   font-family: var(--mono); font-size: 0.78rem;
   color: var(--muted); padding: 8px 12px;
