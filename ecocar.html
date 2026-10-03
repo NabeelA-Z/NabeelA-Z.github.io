@@ -1,0 +1,309 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>EcoCAR 12 V Low-Voltage Architecture — Nabeel Abu Zaineh</title>
+<meta name="description" content="A 12 V low-voltage power and communication architecture for an autonomous-vehicle sensor suite, designed as a three-person application challenge for McMaster EcoCAR: power budget, battery selection, fuse and wire sizing, and the CAN and Ethernet network.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@700;800&family=IBM+Plex+Sans:wght@400;600&family=IBM+Plex+Mono:wght@400;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<header>
+  <div class="wrap nav">
+    <a class="brand" href="index.html">nabeel@ece:~$<span class="cursor">█</span></a>
+    <nav aria-label="Main">
+      <ul>
+        <li><a href="index.html">Home</a></li>
+        <li><a href="projects.html" aria-current="page">Projects</a></li>
+        <li><a href="index.html#contact">Contact</a></li>
+      </ul>
+    </nav>
+  </div>
+</header>
+
+<main class="wrap">
+  <div class="detail-hero">
+    <p class="crumb"><a href="projects.html">Projects</a> / PROJ-ECOCAR-LV</p>
+    <h1>12 V Low-Voltage Architecture for an Autonomous-Vehicle Sensor Suite</h1>
+    <div class="detail-meta">
+      <span class="tag">Power Electronics</span><span class="tag">Automotive</span>
+      <span class="tag">Systems Design</span><span class="tag">Fuse &amp; wire sizing</span>
+      <span class="tag">CAN</span><span class="tag">Ethernet</span>
+      <span class="tag">McMaster EcoCAR</span>
+    </div>
+  </div>
+
+  <div class="detail-body">
+
+    <figure class="site-fig">
+      <img src="img/ecocar-comm-map.png" alt="Communication and port map. The LiDAR and the PoE camera connect over Gigabit Ethernet to the dSPACE AUTERA. The AUTERA links to the Speedgoat Baseline-S, which talks to the Tesla drive unit over two 500 kbit/s CAN buses and to the Surface Go 3 through a USB-C hub.">
+      <figcaption>The communication and port map, links L1 to L8. Every sensor gets its own
+      Gigabit port on the AUTERA; the drive unit's two CAN buses land on the Speedgoat.</figcaption>
+    </figure>
+
+    <h2><span class="num">1.0</span>The Problem</h2>
+    <p>
+      An EV competition car was getting a new connected-and-automated-vehicle (CAV) suite,
+      and its stock 12 V system was never sized for it. Our task was to design the 12 V
+      network that powers and connects seven new components, and to justify every part.
+    </p>
+    <p>The seven loads:</p>
+    <ul>
+      <li><strong>Tesla Model 3 rear drive unit</strong>, its 12 V side</li>
+      <li><strong>dSPACE AUTERA</strong>, the autonomous compute</li>
+      <li><strong>Speedgoat Baseline-S</strong>, the vehicle controller</li>
+      <li><strong>Ouster OS1-64</strong> LiDAR</li>
+      <li><strong>Luxonis OAK-D Pro W PoE</strong> camera</li>
+      <li><strong>Microsoft Surface Go 3</strong>, the driver display</li>
+      <li><strong>Noctua</strong> 5 V fan</li>
+    </ul>
+    <p>
+      This was a paper design, done by a three-person team as the application challenge for
+      the McMaster EcoCAR team (VHI Electrical Development Challenge 2026, Track B, EcoCAR EV
+      Innovation Challenge GM track). The report was submitted on 2 October 2026 and
+      presented on 4 October.
+    </p>
+    <table class="specs">
+      <caption>Project definition</caption>
+      <tr><th>Context</th><td>McMaster EcoCAR, VHI Electrical Development Challenge 2026, Track B</td></tr>
+      <tr><th>Team</th><td>Mustafa Alhamadni, Nabeel Abu Zaineh, Abdelrhman Aldeeb</td></tr>
+      <tr><th>Dates</th><td>September 2026; submitted Oct 2, presented Oct 4</td></tr>
+      <tr><th>Status</th><td>Design complete</td></tr>
+      <tr><th>My role</th><td>Component research and calculations</td></tr>
+      <tr><th>Tools</th><td>KiCad (schematic), Excel sizing workbook (490+ formulas), Python for figures, Word</td></tr>
+      <tr><th>Scope</th><td>Power budget, battery, main feed, distribution, branch fuses and wire, converters, communication network, BOM</td></tr>
+    </table>
+
+    <h3 class="sub">My role</h3>
+    <p>
+      I was responsible for <strong>component research and calculations</strong>: finding
+      and comparing the parts against their datasheets, and working the numbers behind the
+      design, from the power budget and battery runtime to voltage drop and fuse and wire
+      sizing. The design decisions on this page were made as a team, so the rest of the page
+      says "we".
+    </p>
+
+    <h2><span class="num">2.0</span>Key Numbers</h2>
+    <div class="stat-grid">
+      <div class="stat"><span class="stat-val">60.4 A</span><span class="stat-label">Worst-case draw at 11 V, every load at peak at once (28.7 A typical)</span></div>
+      <div class="stat"><span class="stat-val">~95 min</span><span class="stat-label">Runtime to 50% charge on the battery alone, at typical load</span></div>
+      <div class="stat"><span class="stat-val">2.1%</span><span class="stat-label">Main-feed voltage drop, 1/0 AWG over a 10 m round trip</span></div>
+      <div class="stat"><span class="stat-val">~$2,060</span><span class="stat-label">USD bill of materials, 34 line items (2 more on quote)</span></div>
+    </div>
+    <p>
+      One load dominates the budget. The dSPACE AUTERA alone draws about
+      <strong>41 A worst case, roughly two-thirds of the total</strong>. Its power draw isn't
+      published, so we estimated it at 450 W maximum from its components plus margin. That
+      single estimate drives the size of the main feed, the main fuse and the distribution
+      block, which is why it is the first assumption listed in section 7.0.
+    </p>
+
+    <h2><span class="num">3.0</span>Battery: Reserve Capacity, Not Cold-Cranking Amps</h2>
+    <p>
+      12 V batteries are usually compared on cold-cranking amps. CCA describes a 30-second
+      engine start, and an EV never cranks an engine. What this system actually does is hold
+      a steady electronic load of about 29 A. The rating that describes that is
+      <strong>reserve capacity</strong>: minutes of runtime at 25 A.
+    </p>
+    <p>
+      We selected the <strong>Odyssey ODX-AGM31M</strong>: 220 minutes of reserve capacity,
+      and rated to +80 °C, which clears the 70 °C engine bay it would sit in. At typical load
+      that gives an estimated ~95 minutes to 50% charge with the battery carrying the system
+      alone.
+    </p>
+    <div class="callout">
+      <p class="callout-label">Design decision</p>
+      <p>
+        Choosing on the headline spec would have optimised for a job the battery never does.
+        Picking the metric that matches the real load profile is the whole decision; the
+        part number follows from it.
+      </p>
+    </div>
+
+    <h2><span class="num">4.0</span>Main Feed and Protection</h2>
+
+    <h3 class="sub">Voltage drop set the gauge, not ampacity</h3>
+    <p>
+      2 AWG could carry the current. It failed anyway: over the 10 m round trip it dropped
+      <strong>3.3%</strong>, past our 3% limit. <strong>1/0 AWG</strong> drops 2.1%. On a 12 V
+      system there is very little voltage to spare, so the cable is sized by how much it loses,
+      not by how much it can carry before it overheats.
+    </p>
+
+    <h3 class="sub">A 100 A fuse on the battery stud</h3>
+    <p>
+      The main fuse is a 100 A MRBF, sized from the worst-case current with two margins:
+    </p>
+    <p>
+      <code>60.4 A × 1.25 (continuous) × 1.25 (future growth) = 94 A → 100 A</code>
+    </p>
+    <ul>
+      <li><strong>Mounted directly on the battery terminal</strong>, so no length of cable is
+        left unprotected.</li>
+      <li><strong>10,000 A interrupt rating</strong>, above the battery's fault current, so
+        the fuse can actually clear a dead short.</li>
+      <li><strong>1.67× the largest branch fuse</strong> (60 A), so a fault on one branch
+        clears at that branch and leaves the rest of the system running.</li>
+    </ul>
+
+    <h3 class="sub">A distribution block chosen for one big branch</h3>
+    <p>
+      The AUTERA needs a 60 A fuse, and no blade-fuse slot supports that. The
+      <strong>Blue Sea SafetyHub 150</strong> has MIDI slots for the large branch plus six
+      blade slots, a negative bus and IP66 sealing. The upgrade path we identified is a
+      CAN-connected power module that reports current on each branch.
+    </p>
+
+    <h2><span class="num">5.0</span>Branch Fuse and Wire Sizing</h2>
+    <p>
+      Every branch went through the same method, set up in the sizing workbook:
+    </p>
+    <ol>
+      <li><strong>Fuse</strong> = next standard size at or above 1.25 × worst-case current
+        (or the device's minimum fuse, if larger).</li>
+      <li><strong>Wire</strong> = the smallest gauge whose derated ampacity exceeds the fuse
+        rating <em>and</em> whose round-trip voltage drop is within the limit for that
+        load.</li>
+    </ol>
+    <p>
+      Ampacity is derated twice: × 0.761 for the 70 °C environment and × 0.60 for running in a
+      harness bundle. The voltage-drop limits differ by load: 3% for controllers and sensors,
+      2% for the LiDAR, and 10% for wide-input converters, which regulate their own output.
+    </p>
+    <figure class="site-fig" style="max-width: 640px;">
+      <img src="img/ecocar-sizing-flow.png" alt="Flowchart: compute worst-case branch current, required fuse, select the next standard fuse, start at the smallest gauge, then step up a gauge until both the ampacity check and the voltage-drop check pass.">
+      <figcaption>The fuse and wire sizing loop. A gauge is accepted only when it passes both
+      the ampacity check and the voltage-drop check.</figcaption>
+    </figure>
+    <table class="specs">
+      <caption>Branch results</caption>
+      <tr><th>Branch</th><th>Max current (A)</th><th>Fuse</th><th>Wire</th></tr>
+      <tr><td>dSPACE AUTERA</td><td>40.9</td><td>60 A MIDI</td><td>6 AWG</td></tr>
+      <tr><td>Motor (12 V side)</td><td>11.4</td><td>15 A</td><td>12 AWG</td></tr>
+      <tr><td>Surface Go 3</td><td>2.73</td><td>7.5 A</td><td>18 AWG</td></tr>
+      <tr><td>LiDAR</td><td>2.55</td><td>5 A</td><td>16 AWG</td></tr>
+      <tr><td>Speedgoat</td><td>1.82</td><td>5 A</td><td>18 AWG</td></tr>
+      <tr><td>Camera</td><td>0.80</td><td>3 A</td><td>18 AWG</td></tr>
+      <tr><td>Fan</td><td>0.19</td><td>3 A</td><td>18 AWG</td></tr>
+    </table>
+    <p>
+      The LiDAR row shows why the second check matters. On current alone it would get
+      18 AWG like the other small loads. Its tighter 2% limit pushed it to
+      <strong>16 AWG</strong>, to keep at least 9.5 V at the sensor.
+    </p>
+
+    <figure class="site-fig">
+      <a href="img/ecocar-schematic.png"><img src="img/ecocar-schematic.png" alt="KiCad schematic of the 12 V system: battery, 100 A MRBF fuse and main feed into the Blue Sea SafetyHub 150, with seven fused branches running to the loads, three of them through DC-DC converters, and a common ground return."></a>
+      <figcaption>The KiCad schematic. Battery and main fuse on the left, the SafetyHub's
+      seven fused branches down the middle, converters in green, loads on the right, and the
+      common ground return along the bottom.</figcaption>
+    </figure>
+
+    <h3 class="sub">Three converters for loads that can't use 12 V</h3>
+    <ul>
+      <li><strong>12 → 48 V PoE injector</strong> for the camera, which carries power and
+        Gigabit Ethernet on one cable.</li>
+      <li><strong>12 → 5 V regulated supply</strong> for the fan.</li>
+      <li><strong>12 V → USB-C PD 65 W</strong> for the Surface Go 3.</li>
+    </ul>
+
+    <h2><span class="num">6.0</span>Communication Architecture</h2>
+    <p>
+      The network in the hero figure has eight links. The AUTERA receives the LiDAR point
+      cloud (L5, up to 64 Mbit/s over UDP) and camera video (L4) and exchanges requests with
+      the Speedgoat (L6). The Speedgoat talks to the drive unit and links to the driver display (L8).
+      Two of the components could not connect as delivered, so the network had to bridge
+      them:
+    </p>
+    <ul>
+      <li><strong>The Speedgoat had no CAN port.</strong> We added an IO691 CAN module for
+        the motor's two CAN buses, PT-CAN and Party-CAN (L1, L2), both at 500 kbit/s with
+        120 Ω termination at each end.</li>
+      <li><strong>The Surface had no Ethernet.</strong> We added a USB-C hub with Gigabit
+        Ethernet and charging pass-through, so a single cable (L7) carries both data and
+        power to the display.</li>
+    </ul>
+
+    <h3 class="sub">No Ethernet switch</h3>
+    <p>
+      The AUTERA has four Gigabit ports, and we used three of them. Giving each sensor its own
+      port means no shared bandwidth between the LiDAR and the camera, and no extra powered
+      box in the car that could fail.
+    </p>
+    <div class="callout">
+      <p class="callout-label">Design decision</p>
+      <p>
+        A switch would have been the generic answer and would have added a component, a
+        fuse branch and a single point of failure. Checking the port count on the compute
+        unit first removed the need for one.
+      </p>
+    </div>
+
+    <figure class="site-fig">
+      <img src="img/ecocar-power-flow.png" alt="EV power flow: HV battery through contactors, inverter, motor and reducer to the rear wheels, with a regenerative braking return path and a DC-DC converter feeding the 12 V low-voltage system.">
+      <figcaption>Background: where the 12 V system sits in the EV. The DC-DC converter feeds
+      it from the high-voltage pack, and the LV side powers the gate drivers and closes the
+      contactors.</figcaption>
+    </figure>
+
+    <h2><span class="num">7.0</span>What We Would Verify Next</h2>
+    <p>
+      We flagged three assumptions in the report. Each one has a clear check, and each would
+      change the design if it turned out wrong.
+    </p>
+    <table class="specs">
+      <caption>Open assumptions</caption>
+      <tr><th>Assumption</th><th>What would change</th></tr>
+      <tr><td>AUTERA power is estimated (450 W max)</td><td>Adding a GPU would raise its branch to 70 A and 4 AWG</td></tr>
+      <tr><td>Tesla CAN rate and termination come from community reverse-engineering</td><td>To be confirmed with a CAN analyser</td></tr>
+      <tr><td>The vehicle's HV→12 V DC-DC converter has headroom for the added ~29 A</td><td>Outside our scope and no rating was given; must be confirmed</td></tr>
+    </table>
+
+    <h2><span class="num">8.0</span>What This Project Taught Me</h2>
+    <p>
+      Most of the decisions on this page came down to choosing the right criterion before
+      choosing a part: reserve capacity instead of cranking amps, voltage drop instead of
+      ampacity, port count before adding a switch. Once the criterion was right, the part
+      was usually obvious.
+    </p>
+    <p>
+      It also showed how far one estimate can travel through a design. The AUTERA's 450 W
+      figure sets two-thirds of the budget, and from there the main fuse, the main feed and
+      the distribution block. Stating it clearly as an estimate, and saying what changes if
+      it is wrong, was as important as the sizing itself.
+    </p>
+    <p>
+      The method links back to my bench work. In the
+      <a href="psu.html">DC power supply</a> the gap between design and measurement came down
+      to real diode drops and contact resistance; here those losses were budgeted on paper
+      from the start.
+    </p>
+  </div>
+
+  <div class="proj-pager">
+    <a class="btn" href="projects.html">← All projects</a>
+    <a class="btn" href="charger.html">Next: USB-C Charger PCB →</a>
+  </div>
+</main>
+
+<footer id="contact">
+  <div class="wrap">
+    <div class="foot-grid">
+      <div>
+        <h2>Contact</h2>
+      </div>
+      <ul class="contact-list">
+        <li><span class="label">email</span><a href="mailto:nabeelabuzaineh@gmail.com">nabeelabuzaineh@gmail.com</a></li>
+        <li><span class="label">linkedin</span><a href="https://www.linkedin.com/in/nabeel-abu-zaineh-313452333/">/in/Nabeel-Abu-Zaineh</a></li>
+        <li><span class="label">github</span><a href="https://github.com/NabeelA-Z">/NabeelA-Z</a></li>
+      </ul>
+    </div>
+    <p class="fineprint">© 2026 Nabeel Abu Zaineh</p>
+  </div>
+</footer>
+</body>
+</html>
