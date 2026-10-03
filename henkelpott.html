@@ -1,0 +1,439 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Henkelpott: Champions League Prediction Engine — Nabeel Abu Zaineh</title>
+<meta name="description" content="A seeded Monte Carlo engine for the 2026/27 UEFA Champions League. A Dixon-Coles goals model fit in Python on 56,000 club results, backtested against Elo on 753 held-out matches, then simulated in the browser across a pool of Web Workers.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@700;800&family=IBM+Plex+Sans:wght@400;600&family=IBM+Plex+Mono:wght@400;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<header>
+  <div class="wrap nav">
+    <a class="brand" href="index.html">nabeel@ece:~$<span class="cursor">█</span></a>
+    <nav aria-label="Main">
+      <ul>
+        <li><a href="index.html">Home</a></li>
+        <li><a href="projects.html" aria-current="page">Projects</a></li>
+        <li><a href="index.html#contact">Contact</a></li>
+      </ul>
+    </nav>
+  </div>
+</header>
+
+<main class="wrap">
+  <div class="detail-hero">
+    <p class="crumb"><a href="projects.html">Projects</a> / PROJ-UCL-SIM</p>
+    <h1>Henkelpott: Champions League Prediction Engine</h1>
+    <div class="detail-meta">
+      <span class="tag">Python</span><span class="tag">NumPy / SciPy</span>
+      <span class="tag">TypeScript</span><span class="tag">React</span>
+      <span class="tag">Web Workers</span><span class="tag">Monte Carlo</span>
+      <span class="tag">Statistical modelling</span>
+    </div>
+  </div>
+
+  <div class="detail-body">
+
+    <h2><span class="num">1.0</span>The Question</h2>
+    <p>
+      <em>Henkelpott</em>, "the pot with handles", is the German nickname for the Champions
+      League trophy. The project asks a narrow question: given everything known about these
+      36 clubs today, <strong>how likely is each one to lift it in Madrid on 5 June
+      2027?</strong>
+    </p>
+    <p>
+      Answering that properly is two problems stacked on top of each other. The first is
+      rating: how many goals should Bayern expect against Bodø/Glimt, when the two clubs
+      almost never play each other and spend the season in leagues of very different
+      strength? The second is structure: the 2024/25 format change replaced the group stage
+      with a single 36-club Swiss-model league, a tie-breaker cascade, a knockout play-off and
+      a fixed bracket. A title probability has to come out of simulating that whole path, not
+      from rating the clubs alone.
+    </p>
+    <div class="callout">
+      <p class="callout-label">The constraint that shaped everything</p>
+      <p>
+        A probability is only worth publishing if it can be checked. That meant two
+        commitments from the start: <strong>test the model on seasons it never saw</strong>
+        against a credible baseline, and <strong>make every simulation reproducible</strong>,
+        so a shared link shows exactly the numbers the sender saw.
+      </p>
+    </div>
+
+    <h2><span class="num">2.0</span>System Overview</h2>
+    <p>
+      The work splits cleanly across a language boundary. Fitting is heavy, slow and done
+      once per matchday, so it lives in Python. Simulating is fast, interactive and done
+      every time someone opens the page, so it lives in the browser.
+    </p>
+    <ol>
+      <li><strong>Ingest.</strong> <code>fetch.py</code> downloads domestic results from
+        football-data.co.uk and European results from openfootball; <code>parse.py</code>
+        merges them into one match table with one ID per club across every source.</li>
+      <li><strong>Fit.</strong> <code>fit.py</code> fits the goals model and an Elo baseline,
+        runs the backtest, and freezes the ratings, fixtures and validation results into a
+        single <code>model.json</code>.</li>
+      <li><strong>Simulate.</strong> A static React app loads that file and runs the season
+        thousands of times in Web Workers. Nothing is fetched at runtime.</li>
+    </ol>
+    <table class="specs">
+      <caption>System definition</caption>
+      <tr><th>Season modelled</th><td>UEFA Champions League 2026/27, 36 clubs, 144 league-phase fixtures</td></tr>
+      <tr><th>Training data</th><td>56,002 matches, 752 clubs, 56 countries, Sept 2015 to Sept 2026</td></tr>
+      <tr><th>Sources</th><td>22 domestic top flights plus UCL, UEL, UECL and all three qualifying rounds</td></tr>
+      <tr><th>Goals model</th><td>Dixon-Coles bivariate Poisson, fit by L-BFGS with analytic gradients</td></tr>
+      <tr><th>Baseline</th><td>Club-Elo-style ratings with an ordered-logit draw model</td></tr>
+      <tr><th>Simulation</th><td>5,000 to 50,000 seeded seasons per run, in up to 6 Web Workers</td></tr>
+      <tr><th>Stack</th><td>Python (NumPy, SciPy) · TypeScript, React, Vite · Vitest</td></tr>
+      <tr><th>Size</th><td>About 4,900 lines across the model and the app</td></tr>
+      <tr><th>Repository</th><td><a href="https://github.com/NabeelA-Z/Henkelpott---Champions-League-Prediction-Engine">github.com/NabeelA-Z/Henkelpott</a></td></tr>
+    </table>
+
+    <h2><span class="num">3.0</span>The Goals Model</h2>
+    <p>
+      Every match is modelled as two Poisson goal counts. Each club has an attack and a
+      defence rating, and the expected goals for each side come from a log-linear model:
+    </p>
+    <p>
+      <code>log λ<sub>home</sub> = μ + att<sub>home</sub> − def<sub>away</sub> + H</code><br>
+      <code>log λ<sub>away</sub> = μ + att<sub>away</sub> − def<sub>home</sub></code>
+    </p>
+    <p>
+      Independent Poisson goals are known to get low scores wrong: real football has more
+      0–0 and 1–1 draws than the product of two Poissons predicts. The
+      <strong>Dixon-Coles correction</strong> rescales the four cells 0–0, 1–0, 0–1 and 1–1 by
+      a factor controlled by one parameter, ρ, fit after the ratings. It came out at
+      ρ = −0.053, which nudges probability toward low-scoring draws in the expected
+      direction.
+    </p>
+
+    <h3 class="sub">Recent results count more</h3>
+    <p>
+      Squads change every summer, so a result from 2016 should not count as much as one from
+      last month. Every match is weighted by <code>e<sup>−ξ·age</sup></code>. The tuned value,
+      ξ = 0.003 per day, gives a half-life of about <strong>eight months</strong>: last
+      season matters, three seasons ago barely does.
+    </p>
+
+    <h3 class="sub">Home advantage, measured twice</h3>
+    <p>
+      Home advantage is a fitted parameter, not an assumption, and it is fit separately for
+      domestic and European football. It came out noticeably larger in Europe:
+      H = 0.21 in league play, <strong>H = 0.33 in European competition</strong>, so a home side
+      in Europe is expected to score about 39% more than on neutral ground. That matters for
+      the simulation, because every two-legged tie is decided partly by who hosts the second
+      leg. The final in Madrid is neutral and gets H = 0.
+    </p>
+
+    <h3 class="sub">Fitting it fast enough to tune</h3>
+    <p>
+      With 752 clubs and 56 countries the model has a little over 1,600 parameters. The
+      negative log-likelihood and its full gradient are written out by hand in vectorised
+      NumPy, with <code>np.bincount</code> scattering per-match residuals back onto clubs and
+      countries, and handed to SciPy's L-BFGS-B. Analytic gradients are what make the
+      backtest in section 5.0 practical: the hyperparameter search refits the model 32 times,
+      and the test then refits it once per season.
+    </p>
+
+    <h2><span class="num">4.0</span>Putting Every League on One Scale</h2>
+    <p>
+      This is the hardest problem in the project. A domestic result only says how strong a
+      club is relative to its own league. Winning the Norwegian league by fifteen points and
+      winning the Premier League by fifteen points are not the same achievement, and a model
+      trained naïvely on both would treat them as if they were.
+    </p>
+    <p>
+      The fix is to split each rating into two parts:
+      <code>att<sub>club</sub> = A<sub>country</sub> + α<sub>club</sub></code>, and likewise
+      for defence. The club deviation α is shrunk toward zero with an L2 prior (σ = 0.9);
+      the country term A is barely shrunk at all. Domestic matches only ever compare clubs
+      with the same country term, so they cannot move A. The only data that can pin the
+      country terms down is <strong>matches where leagues meet</strong>: European
+      competition.
+    </p>
+    <p>
+      That is why the training set includes the Europa League, the Conference League and all
+      the qualifying rounds, not just the Champions League. Those 3,762 European matches are
+      where most of the information about Austria, Norway, Slovakia or Azerbaijan lives,
+      because those leagues' clubs rarely reach the Champions League proper but meet
+      everyone in the earlier rounds.
+    </p>
+    <div class="callout">
+      <p class="callout-label">Design decision</p>
+      <p>
+        The shrinkage is asymmetric on purpose. Strong shrinkage on clubs and weak shrinkage
+        on countries tells the optimiser that individual clubs should stay close to their
+        league's level unless the data clearly says otherwise, while leaving the league
+        levels free for the European results to set. Shrinking both equally would have let
+        domestic dominance leak into the cross-league comparison.
+      </p>
+    </div>
+
+    <h3 class="sub">Joining the data sources</h3>
+    <p>
+      None of this works unless "Man City" in one file and "Manchester City FC" in another
+      are the same row. <code>parse.py</code> gives each club a single
+      <code>COUNTRY:Name</code> ID using the European-competition spelling, matches domestic
+      names to it with normalised fuzzy matching, and falls back to a hand-written table of
+      about fifty fixes where fuzzy matching is unreliable ("Sp Lisbon", "Nott'm Forest",
+      "Buyuksehyr"). One club split across two IDs would quietly get two half-trained ratings
+      and break the cross-league link it was supposed to carry.
+    </p>
+
+    <h2><span class="num">5.0</span>Validation</h2>
+    <p>
+      The backtest is built to avoid fooling myself. For each season from 2021/22 to
+      2025/26, both the model and the Elo baseline were <strong>frozen on 1 September</strong>
+      using only data from before that date, then asked for win/draw/loss probabilities on
+      every Champions League match of that season. The hyperparameters (ξ, σ and a
+      European-match weight) were chosen on 2019/20 and 2020/21 only, then left alone. No
+      test season influenced any choice.
+    </p>
+    <p>
+      The headline metric is the <strong>ranked probability score</strong>, which, unlike
+      plain accuracy, rewards a model for being close: predicting a draw when the home side
+      wins is penalised less than predicting an away win.
+    </p>
+    <table class="specs">
+      <caption>Held-out backtest, 753 UCL matches (lower is better)</caption>
+      <tr><th>Season</th><th>Matches</th><th>RPS · model</th><th>RPS · Elo</th></tr>
+      <tr><td>2021/22</td><td>125</td><td>0.1933</td><td><strong>0.1854</strong></td></tr>
+      <tr><td>2022/23</td><td>125</td><td><strong>0.1877</strong></td><td>0.1888</td></tr>
+      <tr><td>2023/24</td><td>125</td><td>0.1882</td><td><strong>0.1878</strong></td></tr>
+      <tr><td>2024/25</td><td>189</td><td><strong>0.2161</strong></td><td>0.2305</td></tr>
+      <tr><td>2025/26</td><td>189</td><td><strong>0.2021</strong></td><td>0.2066</td></tr>
+      <tr><td><strong>All</strong></td><td><strong>753</strong></td><td><strong>0.1995</strong></td><td>0.2030</td></tr>
+    </table>
+    <table class="specs">
+      <caption>Overall scores</caption>
+      <tr><th>Metric</th><th>Model</th><th>Elo</th><th>Uniform ⅓-⅓-⅓</th></tr>
+      <tr><td>Ranked probability score</td><td><strong>0.1995</strong></td><td>0.2030</td><td>0.2470</td></tr>
+      <tr><td>Brier score</td><td><strong>0.5507</strong></td><td>0.5608</td><td>0.6667</td></tr>
+      <tr><td>Log-loss</td><td><strong>0.9356</strong></td><td>0.9512</td><td>1.0986</td></tr>
+      <tr><td>Expected calibration error</td><td><strong>2.3%</strong></td><td>3.3%</td><td>n/a</td></tr>
+    </table>
+    <p>
+      Overall the model's RPS is <strong>1.7% better than Elo's</strong>. That is a modest
+      margin, and the season breakdown is more informative than the total. Elo actually won
+      two of the five seasons. The model's advantage is concentrated in
+      <strong>2024/25 and 2025/26, the two 36-club seasons</strong>, where the Swiss format
+      pairs clubs from very different leagues far more often than the old group stage did.
+      That is exactly the situation the cross-league calibration in section 4.0 was built
+      for, so the result lines up with the reason the model is structured the way it is.
+    </p>
+    <p>
+      The calibration figure says something different from the RPS. An expected calibration
+      error of 2.3% means that when the model says an outcome is 40% likely, it happens close
+      to 40% of the time. For a tool whose whole output is a list of probabilities, being
+      calibrated matters as much as being sharp.
+    </p>
+    <div class="callout">
+      <p class="callout-label">Reading the result honestly</p>
+      <p>
+        Elo is a strong baseline and a 1.7% improvement is not a breakthrough. I report the
+        per-season table, including the seasons the model lost, because the total on its own
+        would hide where the improvement comes from. Only two seasons have used the new format
+        so far, so the evidence that the model handles the format better rests on 378 matches.
+      </p>
+    </div>
+
+    <h2><span class="num">6.0</span>Simulating the Season</h2>
+    <p>
+      Ratings give match probabilities. Title odds come from playing the whole competition
+      many times. Each simulated season runs:
+    </p>
+    <ol>
+      <li><strong>League phase.</strong> All 144 fixtures. In <em>season to date</em> mode,
+        results that have already happened are locked in and only the remaining fixtures
+        are simulated.</li>
+      <li><strong>The table</strong>, using UEFA's full tie-breaker order: points, goal
+        difference, goals scored, away goals scored, wins, away wins, then opponents'
+        points, goal difference and goals scored.</li>
+      <li><strong>Knockout play-off</strong> for 9th to 24th, paired 9/10 v 23/24 down to
+        15/16 v 17/18, with the pairing within each group drawn.</li>
+      <li><strong>Fixed bracket</strong> from the round of 16, with each seeded pair split
+        across the two halves so 1st and 2nd can only meet in the final.</li>
+      <li><strong>Two-legged ties</strong> with no away-goals rule. Level after 180 minutes
+        goes to 30 minutes of extra time at the second-leg venue, each side's scoring rate
+        scaled to a third of a match, then a kick-by-kick penalty shootout that stops as soon
+        as the result is decided.</li>
+      <li><strong>The final</strong>, a single match on neutral ground.</li>
+    </ol>
+    <p>
+      Writing the bracket as data rather than logic paid off. The play-off pairings and the
+      round-of-16 paths are two small lookup tables in <code>bracket.ts</code>, and the
+      same function builds the bracket for the simulator, for the user's own predictions and
+      for the PNG poster export, so the three can never disagree about who plays whom.
+    </p>
+
+    <h2><span class="num">7.0</span>Making It Fast and Reproducible</h2>
+
+    <h3 class="sub">Two simulators, one set of rules</h3>
+    <p>
+      The engine has two season simulators. The detailed one builds full match objects
+      with lineups, substitutions, goal timelines and player ratings, for the one
+      "featured" season shown in the Match Center. The fast one,
+      <code>fast.ts</code>, runs the same model and the same rules over preallocated typed
+      arrays, allocates almost nothing per season, and is what the bulk Monte Carlo uses.
+      Three details carry most of the speed:
+    </p>
+    <ul>
+      <li><strong>Precomputed samplers.</strong> Each fixture's scoreline grid is computed
+        once, sorted by probability and stored as a cumulative array, so drawing a score is
+        one random number and a short linear scan that usually stops within a few cells.</li>
+      <li><strong>A packed sort key.</strong> The first six tie-breakers are packed into a
+        single number per club, so ranking the table is one numeric comparison in the
+        common case instead of a cascade of six.</li>
+      <li><strong>Cached extra-time rates</strong> per pair of clubs, since the same
+        knockout pairings recur constantly across runs.</li>
+    </ul>
+
+    <h3 class="sub">Parallel without losing determinism</h3>
+    <p>
+      Runs are split into fixed chunks of 1,000 and spread across a pool of Web Workers
+      (hardware threads minus one, capped at six), with results passed back as transferable
+      typed arrays so nothing is copied. The obvious way to do this breaks reproducibility:
+      if each worker owns one random stream, the answer depends on how many workers the
+      visitor's machine has.
+    </p>
+    <p>
+      Instead every chunk gets its own random stream seeded from
+      <code>seed/agg/&lt;chunk&gt;</code>, using a cyrb128 hash feeding an sfc32 generator.
+      Chunks are merged in chunk order regardless of which worker finished first. The result
+      is <strong>identical on a 4-core laptop and a 16-core desktop</strong>, and there is a
+      unit test that asserts exactly that.
+    </p>
+    <div class="callout">
+      <p class="callout-label">Why it matters</p>
+      <p>
+        The seed, run count and mode all live in the URL as
+        <code>?seed=…&amp;runs=…&amp;asof=…</code>. A link reproduces the run exactly, which
+        turns any quoted title probability from a claim into something anyone can check by
+        opening the link.
+      </p>
+    </div>
+
+    <h2><span class="num">8.0</span>The App</h2>
+    <p>
+      The front end is a static React and TypeScript site built with Vite and deployable to
+      any static host. It has five main views:
+    </p>
+    <ul>
+      <li><strong>Dashboard:</strong> title odds, the 36-to-1 funnel, advancement odds per
+        club, and the model's backtest credentials up front.</li>
+      <li><strong>Predict:</strong> a drag-and-drop 1–36 table and full knockout bracket,
+        plus a one-match predictor with a two-leg mode.</li>
+      <li><strong>Match Center:</strong> every match of the featured season, the table, a
+        position-by-matchday chart, lineups and pre-match scoreline odds.</li>
+      <li><strong>Live Bracket:</strong> an animated bracket reveal with a PNG poster export.</li>
+      <li><strong>Methodology:</strong> the model, the validation tables and a calibration
+        chart, all read from the same <code>model.json</code> the simulator uses, so the
+        documentation cannot drift out of date from the numbers.</li>
+    </ul>
+
+    <h3 class="sub">Grading a prediction fairly</h3>
+    <p>
+      The bracket builder grades the user's prediction, and the obvious way to do it, scoring
+      it against one simulated outcome, is mostly noise. Instead the entry is scored against
+      <strong>every simulated season</strong> already run for the dashboard, and compared
+      with a "chalk" entry that picks the model's favourite everywhere. The grade is the
+      ratio of the two expected scores. The report also gives the chance of beating chalk,
+      the best and worst cases, the safest and boldest picks, and the odds of the whole
+      bracket coming true. A brave bracket is not penalised for being brave, only for being
+      expensive in expectation.
+    </p>
+
+    <h2><span class="num">9.0</span>Testing</h2>
+    <p>
+      The engine has a Vitest suite covering the parts where a silent bug would produce
+      plausible-looking but wrong probabilities:
+    </p>
+    <ul>
+      <li>Score grids sum to 1 and two-leg tie odds sum to 1.</li>
+      <li>The fixture list has 144 matches with exactly 8 per club.</li>
+      <li>The tie-breaker cascade ranks correctly, including away goals breaking a tie on
+        goal difference and goals scored.</li>
+      <li>Shootouts always produce a winner with a legal score.</li>
+      <li>The bracket follows the seeded paths and keeps 1st and 2nd apart.</li>
+      <li>Simulations are deterministic for a seed and stable under different chunking.</li>
+      <li>Season-to-date mode locks in real results.</li>
+      <li>A bracket of pure favourites grades close to chalk.</li>
+    </ul>
+
+    <h2><span class="num">10.0</span>Known Limitations</h2>
+    <table class="specs">
+      <caption>Where the build stands</caption>
+      <tr><th>Item</th><th>State</th></tr>
+      <tr><td>Squads</td><td>Placeholders ("Liverpool No. 9"); the format for real UEFA A-lists is documented and ready</td></tr>
+      <tr><td>Elo baseline</td><td>Built in-house to Club Elo's design, because Club Elo's API was down at build time</td></tr>
+      <tr><td>Coefficient tie-breaker</td><td>The final, rarely reached tie-breaker is approximated by pot and draw order</td></tr>
+      <tr><td>Data gaps</td><td>No domestic data after 2024/25 for Azerbaijan, Slovakia and Ukraine; those clubs lean on European results</td></tr>
+      <tr><td>Model refresh</td><td>Manual: enter scores, rerun <code>fetch.py</code> and <code>fit.py</code> (about 30 s), redeploy</td></tr>
+      <tr><td>Player model</td><td>Goals are shared among players by role weights, not by individual player quality</td></tr>
+    </table>
+    <div class="callout">
+      <p class="callout-label">What I would change</p>
+      <p>
+        Load real squads so the player statistics mean something. Automate the matchday
+        refresh with a scheduled job that refits and redeploys. Then move past team-level
+        ratings: the model knows nothing about injuries, rotation or transfers, and every one
+        of those shows up first as a change in who is on the pitch.
+      </p>
+    </div>
+
+    <h2><span class="num">11.0</span>What This Project Taught Me</h2>
+    <p>
+      The modelling was the most interesting part, but the most important decision was the
+      validation setup: freezing the model at a fixed date, tuning on seasons the test never
+      touched, and reporting the seasons the model lost. Without that, a 1.7% improvement is
+      unverifiable. With it, the improvement is small, real, and explained by the part of
+      the model designed to produce it.
+    </p>
+    <p>
+      It also showed me how much engineering sits between a correct model and a usable one.
+      The maths fits on one line. Making it run tens of thousands of seasons in a browser
+      tab, give the same answer on every machine, and explain itself to someone who has
+      never heard of a ranked probability score was most of the work.
+    </p>
+    <p>
+      The approach carries over from my hardware projects. In the
+      <a href="amplifier.html">BJT amplifier</a> the design is only trusted once simulation
+      and measurement agree; here the model is only trusted once it beats a baseline on data
+      it has never seen.
+    </p>
+    <p>
+      Not affiliated with or endorsed by UEFA or any club.
+    </p>
+    <p>
+      <a class="btn" href="https://github.com/NabeelA-Z/Henkelpott---Champions-League-Prediction-Engine">View the repository →</a>
+    </p>
+  </div>
+
+  <div class="proj-pager">
+    <a class="btn" href="vision.html">← Prev: Assistive Vision Bot</a>
+    <a class="btn" href="hub.html">Next: Learning Hub →</a>
+  </div>
+</main>
+
+<footer id="contact">
+  <div class="wrap">
+    <div class="foot-grid">
+      <div>
+        <h2>Contact</h2>
+      </div>
+      <ul class="contact-list">
+        <li><span class="label">email</span><a href="mailto:nabeelabuzaineh@gmail.com">nabeelabuzaineh@gmail.com</a></li>
+        <li><span class="label">linkedin</span><a href="https://www.linkedin.com/in/nabeel-abu-zaineh-313452333/">/in/Nabeel-Abu-Zaineh</a></li>
+        <li><span class="label">github</span><a href="https://github.com/NabeelA-Z">/NabeelA-Z</a></li>
+      </ul>
+    </div>
+    <p class="fineprint">© 2026 Nabeel Abu Zaineh</p>
+  </div>
+</footer>
+</body>
+</html>
